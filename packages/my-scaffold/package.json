@@ -1,5 +1,5 @@
 {
-  "name": "my-scaffold",
+  "name": "@unbyte/my-scaffold",
   "version": "0.1.0",
   "files": [
     "lib",
@@ -35,7 +35,8 @@
   "publishConfig": {
     "bin": {
       "ms": "./lib/index.js"
-    }
+    },
+    "access": "public"
   },
   "engines": {
     "node": ">=18"
