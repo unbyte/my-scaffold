@@ -24,7 +24,8 @@
     "boilerplate"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "plop": "^4.0.5",
