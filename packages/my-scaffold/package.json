@@ -1,0 +1,42 @@
+{
+  "name": "my-scaffold",
+  "version": "0.1.0",
+  "files": [
+    "lib",
+    "templates"
+  ],
+  "bin": {
+    "ms": "./src/index.ts"
+  },
+  "author": {
+    "name": "unbyte",
+    "url": "https://github.com/unbyte"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unbyte/my-scaffold.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "scaffold",
+    "template",
+    "generator",
+    "boilerplate"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "plop": "^4.0.5",
+    "execa": "^5",
+    "minimist": "^1.2.8"
+  },
+  "publishConfig": {
+    "bin": {
+      "ms": "./lib/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

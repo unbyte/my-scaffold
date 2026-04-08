@@ -1,0 +1,25 @@
+{
+  "name": "{{ pkgName }}",
+  "version": "0.0.1",
+  "files": [
+    "lib"
+  ],
+  "bin": {
+    "{{ binName }}": "./src/index.ts"
+  },
+  "author": {
+    "name": "unbyte",
+    "url": "https://github.com/unbyte"
+  },
+  "license": "MIT",
+  "keywords": [],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "bin": {
+      "{{ binName }}": "./lib/index.js"
+    }
+  }
+}
