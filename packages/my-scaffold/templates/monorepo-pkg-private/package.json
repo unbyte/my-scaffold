@@ -1,5 +1,6 @@
 {
   "private": true,
   "name": "{{ pkgName }}",
+  "type": "module",
   "main": "src/index.ts"
 }
