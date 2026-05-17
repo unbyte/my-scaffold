@@ -12,6 +12,10 @@
     "name": "unbyte",
     "url": "https://github.com/unbyte"
   },
+  "imports": {
+    "#templates": "./src/templates.ts",
+    "#actions/*": "./src/actions/*.ts"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/unbyte/my-scaffold.git"

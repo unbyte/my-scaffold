@@ -1,23 +1,16 @@
-import { resolve } from 'node:path'
+import { dirname, join } from 'node:path'
+import { name } from '../package.json'
 
 export enum Template {
   MonorepoLayout = 'monorepo-layout',
-  ScriptLayout = 'script-layout',
-  MonorepoPkgUniversal = 'monorepo-pkg-universal',
-  MonorepoPkgNode = 'monorepo-pkg-node',
   MonorepoPkgCli = 'monorepo-pkg-cli',
+  MonorepoPkgNode = 'monorepo-pkg-node',
   MonorepoPkgPrivate = 'monorepo-pkg-private',
+  MonorepoPkgUniversal = 'monorepo-pkg-universal',
+  ScriptLayout = 'script-layout',
 }
 
-export type LayoutTemplate = Template.MonorepoLayout | Template.ScriptLayout
-
-export type PackageTemplate =
-  | Template.MonorepoPkgUniversal
-  | Template.MonorepoPkgNode
-  | Template.MonorepoPkgCli
-  | Template.MonorepoPkgPrivate
-
 export function resolveTemplate(template: Template) {
-  // from lib/index.js -> templates/
-  return resolve(__dirname, '..', 'templates', template)
+  const packageRoot = dirname(require.resolve(`${name}/package.json`))
+  return join(packageRoot, 'templates', template)
 }

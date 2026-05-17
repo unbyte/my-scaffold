@@ -1,10 +1,10 @@
 import type Inquirer from 'inquirer'
-import { type LayoutTemplate, type PackageTemplate, Template } from './templates'
+import { Template } from '#templates'
 
 export interface PromptPackageAnswer {
   name: string
   bin?: string
-  template: PackageTemplate
+  template: Template
 }
 
 export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPackageAnswer> {
@@ -64,37 +64,12 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
   }
 }
 
-export interface PromptInitAnswer {
-  layout: LayoutTemplate
+export interface PromptMonorepoInitAnswer {
   packages: PromptPackageAnswer[]
-  main?: string
+  main: string
 }
 
-export async function promptInit(inquirer: typeof Inquirer): Promise<PromptInitAnswer> {
-  const { layout } = await inquirer.prompt<{ layout: LayoutTemplate }>([
-    {
-      type: 'list',
-      name: 'layout',
-      message: 'Select project layout',
-      choices: [
-        {
-          name: 'monorepo',
-          value: Template.MonorepoLayout,
-          short: 'monorepo',
-        },
-        {
-          name: 'script',
-          value: Template.ScriptLayout,
-          short: 'script',
-        },
-      ],
-    },
-  ])
-
-  if (layout === Template.ScriptLayout) {
-    return { layout, packages: [] }
-  }
-
+export async function promptMonorepoInit(inquirer: typeof Inquirer): Promise<PromptMonorepoInitAnswer> {
   const packages: PromptPackageAnswer[] = []
 
   let addMore = true
@@ -115,7 +90,6 @@ export async function promptInit(inquirer: typeof Inquirer): Promise<PromptInitA
   }
 
   let main: string
-  // 只在 packages 多于 1 个时才需要用户手动选择指定
   if (packages.length > 1) {
     const { mainPackage } = await inquirer.prompt<{ mainPackage: string }>([
       {
@@ -130,5 +104,5 @@ export async function promptInit(inquirer: typeof Inquirer): Promise<PromptInitA
     main = packages[0].name
   }
 
-  return { layout, packages, main }
+  return { packages, main }
 }

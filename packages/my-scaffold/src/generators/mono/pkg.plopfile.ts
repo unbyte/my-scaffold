@@ -1,11 +1,12 @@
 import type { Actions, NodePlopAPI } from 'plop'
-import { addPackage, pnpmInstall } from './actions'
+import { pnpmInstall } from '#actions/install'
+import { addPackage } from './actions'
 import { type PromptPackageAnswer, promptPackage } from './prompts'
 
 export default function (plop: NodePlopAPI) {
   const output = plop.getDestBasePath()
 
-  plop.setGenerator('package', {
+  plop.setGenerator('mono/pkg', {
     description: 'Add a new package to the monorepo',
     prompts: promptPackage,
     actions: (_answer) => {

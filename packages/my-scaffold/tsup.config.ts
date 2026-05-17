@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/init.plopfile.ts', 'src/pkg.plopfile.ts'],
+  entry: ['src/index.ts', 'src/generators/**/*.plopfile.ts'],
   outDir: 'lib',
   format: ['cjs'],
   platform: 'node',
