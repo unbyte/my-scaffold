@@ -1,10 +1,10 @@
 import type Inquirer from 'inquirer'
-import { Template } from './templates'
+import { type LayoutTemplate, type PackageTemplate, Template } from './templates'
 
 export interface PromptPackageAnswer {
   name: string
   bin?: string
-  template: Template
+  template: PackageTemplate
 }
 
 export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPackageAnswer> {
@@ -65,11 +65,36 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
 }
 
 export interface PromptInitAnswer {
+  layout: LayoutTemplate
   packages: PromptPackageAnswer[]
-  main: string
+  main?: string
 }
 
 export async function promptInit(inquirer: typeof Inquirer): Promise<PromptInitAnswer> {
+  const { layout } = await inquirer.prompt<{ layout: LayoutTemplate }>([
+    {
+      type: 'list',
+      name: 'layout',
+      message: 'Select project layout',
+      choices: [
+        {
+          name: 'monorepo',
+          value: Template.MonorepoLayout,
+          short: 'monorepo',
+        },
+        {
+          name: 'script',
+          value: Template.ScriptLayout,
+          short: 'script',
+        },
+      ],
+    },
+  ])
+
+  if (layout === Template.ScriptLayout) {
+    return { layout, packages: [] }
+  }
+
   const packages: PromptPackageAnswer[] = []
 
   let addMore = true
@@ -105,5 +130,5 @@ export async function promptInit(inquirer: typeof Inquirer): Promise<PromptInitA
     main = packages[0].name
   }
 
-  return { packages, main }
+  return { layout, packages, main }
 }

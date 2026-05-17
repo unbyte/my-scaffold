@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "lefthook install",
+    "go": "tsx src/index.ts",
+    "check": "pnpm check:lint && pnpm check:types",
+    "check:lint": "biome check",
+    "check:types": "tsc --noEmit",
+    "fix": "biome check --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
+    "@types/node": "^25.5.0",
+    "lefthook": "^2.1.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import execa from 'execa'
 import type { ActionType } from 'plop'
 import type { PromptInitAnswer, PromptPackageAnswer } from './prompts'
-import { resolveTemplate, Template } from './templates'
+import { resolveTemplate } from './templates'
 
 export function addPackage(path: string, pkg: PromptPackageAnswer): ActionType {
   // 如果包含 scope, 只取 name
@@ -24,7 +24,7 @@ export function addPackage(path: string, pkg: PromptPackageAnswer): ActionType {
 }
 
 export function initRepo(path: string, repo: PromptInitAnswer): ActionType {
-  const layoutTemplate = resolveTemplate(Template.MonorepoLayout)
+  const layoutTemplate = resolveTemplate(repo.layout)
   return {
     type: 'addMany',
     destination: path,

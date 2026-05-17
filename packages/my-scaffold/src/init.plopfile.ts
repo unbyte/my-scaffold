@@ -6,7 +6,7 @@ export default function (plop: NodePlopAPI) {
   const output = plop.getDestBasePath()
 
   plop.setGenerator('init', {
-    description: 'Generate a new monorepo',
+    description: 'Generate a new project',
     prompts: promptInit,
     actions: (_answer) => {
       const answer = _answer as PromptInitAnswer
@@ -19,9 +19,11 @@ export default function (plop: NodePlopAPI) {
       // 重命名 dotfiles
       actions.push(renameDotfiles(output))
 
-      // 循环输出 packages
-      for (const pkg of answer.packages) {
-        actions.push(addPackage(output, pkg))
+      if (answer.packages.length > 0) {
+        // 循环输出 packages
+        for (const pkg of answer.packages) {
+          actions.push(addPackage(output, pkg))
+        }
       }
 
       // 初始化 git 和 pnpm
