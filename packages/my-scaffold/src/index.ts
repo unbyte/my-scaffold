@@ -10,21 +10,27 @@ function main() {
   const cwd = process.cwd()
   const args = minimist(process.argv.slice(2))
 
-  const command = args._[0] || ''
+  const generator = args._[0]
+  if (!generator) {
+    console.error('No generator specified.')
+    printGenerators()
+    process.exit(1)
+  }
+  const plop = pickPlop(generator)
+  if (!plop) {
+    console.error(`Unknown generator: ${generator}.`)
+    printGenerators()
+    process.exit(1)
+  }
   const target = args._[1] ? resolve(cwd, args._[1]) : cwd
 
-  const configPath = pickPlop(command)
-  runPlop(configPath, target)
+  runPlop(plop, target)
 }
 
 function pickPlop(generator: string) {
   if (generators.includes(generator)) {
     return require.resolve(`./generators/${generator}.plopfile`)
   }
-
-  console.error(`Unknown generator: ${generator}.`)
-  console.error(`Use one of: ${generators.map((generator) => `  - ${generator}`).join('\n')}`)
-  process.exit(1)
 }
 
 function runPlop(configPath: string, target: string) {
@@ -43,4 +49,11 @@ function runPlop(configPath: string, target: string) {
       })
     },
   )
+}
+
+function printGenerators() {
+  console.log('Available generators:')
+  for (const generator of generators) {
+    console.log(`  - ${generator}`)
+  }
 }
