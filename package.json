@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "prepare": "lefthook install",
+    "go": "tsx packages/my-scaffold/src",
     "build": "turbo run build",
     "check": "biome check",
     "fix": "biome check --write"
