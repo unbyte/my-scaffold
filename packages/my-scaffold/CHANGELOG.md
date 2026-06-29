@@ -1,5 +1,15 @@
 # @unbyte/my-scaffold
 
+## 0.3.0
+
+### Minor Changes
+
+- 5975d66: tpl: add new template for vite projects
+
+### Patch Changes
+
+- 35475a4: feat: bump pnpm to v11.9.0
+
 ## 0.2.0
 
 ### Minor Changes
