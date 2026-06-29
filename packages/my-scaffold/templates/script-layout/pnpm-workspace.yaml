@@ -1,6 +1,3 @@
-packages:
-  - "packages/*"
-
 allowBuilds:
   esbuild: false
   lefthook: false
