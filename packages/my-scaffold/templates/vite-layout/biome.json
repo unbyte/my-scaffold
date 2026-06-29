@@ -6,19 +6,17 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/templates"]
+    "includes": ["**"]
   },
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
-    "lineWidth": 120
+    "lineWidth": 140
   },
   "linter": {
     "rules": {
-      "style": {
-        "noNonNullAssertion": "off"
-      }
+      "a11y": "info"
     }
   },
   "assist": {

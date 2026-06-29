@@ -8,6 +8,7 @@ export enum Template {
   MonorepoPkgPrivate = 'monorepo-pkg-private',
   MonorepoPkgUniversal = 'monorepo-pkg-universal',
   ScriptLayout = 'script-layout',
+  ViteLayout = 'vite-layout',
 }
 
 export function resolveTemplate(template: Template) {

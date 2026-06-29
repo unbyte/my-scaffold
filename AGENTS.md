@@ -24,6 +24,18 @@ pnpm go <generator> [target-dir]
 pnpm go mono/init ./tmp-out
 ```
 
+**Trying a generator end-to-end.** Generators write into the target dir (cwd when no target is given), so run them inside a throwaway subdir under `playground/` (gitignored) and inspect the result there:
+
+```
+mkdir -p playground/foo
+cd playground/foo
+tsx ../../packages/my-scaffold/src <generator> .
+# equivalently, from the repo root:
+pnpm go <generator> ./playground/foo
+```
+
+The generated tree (including its own `node_modules` and `.git`) is disposable — delete the subdir when done. Generators that delegate to an interactive scaffolder via `pnpmCreate` (e.g. `vite/init` runs `pnpm create vite`) need a TTY; feeding such a run `</dev/null` makes the underlying tool fall back to its defaults, which is handy for a non-interactive smoke test.
+
 Releases use Changesets (`baseBranch: master`); the release commit message is forced to `chore(release): <version>` by `.changeset/message.js`, keyed off the `@unbyte/my-scaffold` version.
 
 ## Architecture
@@ -34,8 +46,10 @@ Releases use Changesets (`baseBranch: master`); the release commit message is fo
 
 **Reusable actions (`src/actions/`).** Factory functions returning Plop `ActionType`s, shared across generators:
 - `addTemplate` / `addPackage` — Plop `addMany` from a template dir (Handlebars-interpolated).
+- `modifyJson` / `mergeJson` — read a JSON file and rewrite it (2-space, trailing newline). `modifyJson` applies a callback; `mergeJson` deep-merges a *source* JSON file into the target (nested objects merge key-by-key, source scalars/arrays win). Used to fold a template's partial `package.json` into the one a scaffolder generated.
 - `renameDotfiles` — recursively renames `_foo` → `.foo` after files are copied (see Templates below).
 - `pnpmInstall`, `gitInit` — shell out via `execa`.
+- `pnpmCreate(path, args)` — runs `pnpm create <args>` with the TTY inherited (and ensures `path` exists first), so a generator can delegate to an interactive scaffolder like `pnpm create vite`.
 
 **Templates (`templates/<name>/`).** Plain file trees copied verbatim except for Handlebars placeholders like `{{ pkgName }}` and `{{ binName }}`, filled from the `data` passed to `addMany`. Two conventions matter:
 - **Dotfiles are stored with a `_` prefix** (`_gitignore`, `_github/`, `_changeset/`) so they survive packaging and git, then `renameDotfiles` restores the leading dot at generation time. Any new dotfile in a template must use this prefix.

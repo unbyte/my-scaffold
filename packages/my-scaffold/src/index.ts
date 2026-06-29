@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import minimist from 'minimist'
 import { Plop, run } from 'plop'
 
-const generators = ['mono/init', 'mono/pkg', 'script/init']
+const generators = ['mono/init', 'mono/pkg', 'script/init', 'vite/init']
 
 main()
 
