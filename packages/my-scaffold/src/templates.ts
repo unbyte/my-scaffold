@@ -9,6 +9,7 @@ export enum Template {
   MonorepoPkgUniversal = 'monorepo-pkg-universal',
   ScriptLayout = 'script-layout',
   ViteLayout = 'vite-layout',
+  ViteWrangler = 'vite-wrangler',
 }
 
 export function resolveTemplate(template: Template) {

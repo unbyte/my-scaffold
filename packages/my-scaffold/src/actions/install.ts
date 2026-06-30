@@ -25,6 +25,17 @@ export function pnpmCreate(path: string, args: string[]): ActionType {
   }
 }
 
+export function pnpmAdd(path: string, packages: string[], options: { dev?: boolean } = {}): ActionType {
+  return async () => {
+    const args = ['add', ...(options.dev ? ['-D'] : []), ...packages]
+    await execa('pnpm', args, {
+      cwd: path,
+      stdio: 'inherit',
+    })
+    return `pnpm added (${packages.join(' ')})`
+  }
+}
+
 export function gitInit(path: string): ActionType {
   return async () => {
     await execa('git', ['init'], {
