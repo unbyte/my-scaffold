@@ -3,10 +3,10 @@ import { name } from '../package.json'
 
 export enum Template {
   MonorepoLayout = 'monorepo-layout',
-  MonorepoPkgCli = 'monorepo-pkg-cli',
-  MonorepoPkgNode = 'monorepo-pkg-node',
+  MonorepoPkgBin = 'monorepo-pkg-bin',
+  MonorepoPkgBinLib = 'monorepo-pkg-bin-lib',
+  MonorepoPkgLib = 'monorepo-pkg-lib',
   MonorepoPkgPrivate = 'monorepo-pkg-private',
-  MonorepoPkgUniversal = 'monorepo-pkg-universal',
   ScriptLayout = 'script-layout',
   ViteLayout = 'vite-layout',
   ViteWrangler = 'vite-wrangler',

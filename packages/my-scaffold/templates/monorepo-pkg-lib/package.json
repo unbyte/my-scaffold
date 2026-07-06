@@ -1,6 +1,7 @@
 {
   "name": "{{ pkgName }}",
   "version": "0.0.1",
+  "type": "module",
   "main": "src/index.ts",
   "files": [
     "lib"
@@ -16,6 +17,16 @@
     "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
-    "main": "lib/index.js"
+    "access": "public",
+    "main": "lib/index.cjs",
+    "module": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./lib/index.d.ts",
+        "import": "./lib/index.js",
+        "require": "./lib/index.cjs"
+      }
+    }
   }
 }

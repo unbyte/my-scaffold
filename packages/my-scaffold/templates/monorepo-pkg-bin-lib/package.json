@@ -6,6 +6,9 @@
   "files": [
     "lib"
   ],
+  "bin": {
+    "{{ binName }}": "./src/bin.ts"
+  },
   "author": {
     "name": "unbyte",
     "url": "https://github.com/unbyte"
@@ -17,6 +20,7 @@
     "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
+    "access": "public",
     "main": "lib/index.cjs",
     "module": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -26,6 +30,9 @@
         "import": "./lib/index.js",
         "require": "./lib/index.cjs"
       }
+    },
+    "bin": {
+      "{{ binName }}": "./lib/bin.js"
     }
   }
 }
