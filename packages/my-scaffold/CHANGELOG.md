@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.5.0
+
+### Minor Changes
+
+- 6b40306: feat: allow both lib and bin targets for packages
+
 ## 0.4.0
 
 ### Minor Changes
