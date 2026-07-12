@@ -3,7 +3,7 @@ import { renameDotfiles } from '#actions/dotfiles'
 import { gitInit, pnpmInstall } from '#actions/install'
 import { addTemplate } from '#actions/template'
 import { Template } from '#templates'
-import { addPackage } from './actions'
+import { addPackage, resolveDefaultBranch } from './actions'
 import { type PromptMonorepoInitAnswer, promptMonorepoInit } from './prompts'
 
 export default function (plop: NodePlopAPI) {
@@ -17,7 +17,12 @@ export default function (plop: NodePlopAPI) {
 
       const actions: Actions = []
 
-      actions.push(addTemplate(output, Template.MonorepoLayout, { main: answer.main }))
+      actions.push(
+        addTemplate(output, Template.MonorepoLayout, {
+          main: answer.main,
+          baseBranch: resolveDefaultBranch(),
+        }),
+      )
       actions.push(renameDotfiles(output))
 
       for (const pkg of answer.packages) {
