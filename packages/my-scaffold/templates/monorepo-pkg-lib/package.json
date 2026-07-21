@@ -14,7 +14,7 @@
   "keywords": [],
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "turbo run build"
   },
   "publishConfig": {
     "access": "public",
