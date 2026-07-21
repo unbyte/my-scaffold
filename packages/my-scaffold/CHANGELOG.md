@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.6.1
+
+### Patch Changes
+
+- fb4d921: tpl: build workspace deps on publish via `turbo run build`
+
 ## 0.6.0
 
 ### Minor Changes
