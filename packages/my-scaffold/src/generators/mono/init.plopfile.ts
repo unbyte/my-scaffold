@@ -20,6 +20,7 @@ export default function (plop: NodePlopAPI) {
       actions.push(
         addTemplate(output, Template.MonorepoLayout, {
           main: answer.main,
+          releaseAll: answer.releaseStyle === 'all',
           baseBranch: resolveDefaultBranch(),
         }),
       )

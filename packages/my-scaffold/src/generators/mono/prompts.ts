@@ -3,6 +3,7 @@ import { Template } from '#templates'
 
 type Access = 'public' | 'private'
 type Target = 'lib' | 'bin'
+type ReleaseStyle = 'primary' | 'all'
 
 export interface PromptPackageAnswer {
   name: string
@@ -81,7 +82,10 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
 
 export interface PromptMonorepoInitAnswer {
   packages: PromptPackageAnswer[]
-  main: string
+  releaseStyle: ReleaseStyle
+  // The primary package whose version drives the release commit message.
+  // Only set (and only meaningful) when releaseStyle is 'primary'.
+  main?: string
 }
 
 export async function promptMonorepoInit(inquirer: typeof Inquirer): Promise<PromptMonorepoInitAnswer> {
@@ -104,20 +108,40 @@ export async function promptMonorepoInit(inquirer: typeof Inquirer): Promise<Pro
     addMore = continueAdding
   }
 
-  let main: string
-  if (packages.length > 1) {
-    const { mainPackage } = await inquirer.prompt<{ mainPackage: string }>([
-      {
-        type: 'list',
-        name: 'mainPackage',
-        message: 'Select the main package',
-        choices: packages.map((pkg) => pkg.name),
-      },
-    ])
-    main = mainPackage
-  } else {
-    main = packages[0].name
+  const { releaseStyle } = await inquirer.prompt<{ releaseStyle: ReleaseStyle }>([
+    {
+      type: 'list',
+      name: 'releaseStyle',
+      message: 'Select release commit message style',
+      choices: [
+        { name: 'only primary  (chore(release): <version>)', value: 'primary', short: 'primary' },
+        { name: 'all packages  (chore: release packages)', value: 'all', short: 'all' },
+      ],
+    },
+  ])
+
+  if (releaseStyle === 'all') {
+    return { packages, releaseStyle }
   }
 
-  return { packages, main }
+  const publicPackages = packages.filter((pkg) => pkg.access === 'public')
+  const candidates = publicPackages.length > 0 ? publicPackages : packages
+
+  if (candidates.length === 1) {
+    return { packages, releaseStyle, main: candidates[0].name }
+  }
+
+  const defaultMain = publicPackages.length > 1 ? publicPackages[1].name : candidates[0].name
+
+  const { mainPackage } = await inquirer.prompt<{ mainPackage: string }>([
+    {
+      type: 'list',
+      name: 'mainPackage',
+      message: 'Select the primary package',
+      choices: candidates.map((pkg) => pkg.name),
+      default: defaultMain,
+    },
+  ])
+
+  return { packages, releaseStyle, main: mainPackage }
 }
