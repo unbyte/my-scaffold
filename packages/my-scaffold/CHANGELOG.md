@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.7.0
+
+### Minor Changes
+
+- 8e956ca: feat: decide release commit style for monorepo
+
 ## 0.6.1
 
 ### Patch Changes
