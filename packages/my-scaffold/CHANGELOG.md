@@ -1,5 +1,12 @@
 # @unbyte/my-scaffold
 
+## 0.7.1
+
+### Patch Changes
+
+- 7cdf6a1: tpl: reduce biome line width to 100
+- 151907d: tpl: add coverage dir to gitignore list
+
 ## 0.7.0
 
 ### Minor Changes
