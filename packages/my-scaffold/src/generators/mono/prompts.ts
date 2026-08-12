@@ -7,6 +7,7 @@ type ReleaseStyle = 'primary' | 'all'
 
 export interface PromptPackageAnswer {
   name: string
+  directory: string
   access: Access
   template: Template
   bin?: string
@@ -24,8 +25,9 @@ function resolvePackageTemplate(access: Access, targets: Target[] = []): Templat
 }
 
 export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPackageAnswer> {
-  const { name, access, targets, bin } = await inquirer.prompt<{
+  const { name, directory, access, targets, bin } = await inquirer.prompt<{
     name: string
+    directory: string
     access: Access
     targets?: Target[]
     bin?: string
@@ -38,6 +40,12 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
         const valid = /^(@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(input)
         return valid || 'Invalid npm package name'
       },
+    },
+    {
+      type: 'input',
+      name: 'directory',
+      message: 'Enter directory name',
+      default: ({ name }: { name: string }) => name.split('/').pop(),
     },
     {
       type: 'list',
@@ -74,6 +82,7 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
 
   return {
     name,
+    directory,
     access,
     template: resolvePackageTemplate(access, targets),
     bin,

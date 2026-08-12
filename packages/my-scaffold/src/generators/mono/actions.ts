@@ -14,12 +14,11 @@ export function resolveDefaultBranch() {
 }
 
 export function addPackage(path: string, pkg: PromptPackageAnswer): ActionType {
-  const dirname = pkg.name.split('/').pop()!
   const templateBase = resolveTemplate(pkg.template)
 
   return {
     type: 'addMany',
-    destination: join(path, 'packages', dirname),
+    destination: join(path, 'packages', pkg.directory),
     base: templateBase,
     templateFiles: `${templateBase}/**/*`,
     data: {
