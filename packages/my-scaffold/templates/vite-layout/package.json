@@ -10,5 +10,11 @@
     "@biomejs/biome": "^2.4.9",
     "lefthook": "^2.1.4"
   },
-  "packageManager": "pnpm@11.9.0"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0",
+      "onFail": "error"
+    }
+  }
 }
