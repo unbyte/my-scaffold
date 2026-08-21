@@ -1,5 +1,12 @@
 # @unbyte/my-scaffold
 
+## 0.7.2
+
+### Patch Changes
+
+- 0d29a1a: feat: accept custom package directory name
+- 6347678: feat: specify pnpm version in standard devEngines
+
 ## 0.7.1
 
 ### Patch Changes
