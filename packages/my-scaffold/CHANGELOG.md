@@ -1,5 +1,12 @@
 # @unbyte/my-scaffold
 
+## 0.7.3
+
+### Patch Changes
+
+- af33473: fix: `devEngines.packageManager.version` must only allow versions within one major version
+- 4adc31b: feat: mark workspace root as module
+
 ## 0.7.2
 
 ### Patch Changes
