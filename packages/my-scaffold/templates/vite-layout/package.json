@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "prepare": "lefthook install",
     "check": "pnpm check:lint && pnpm check:types",
