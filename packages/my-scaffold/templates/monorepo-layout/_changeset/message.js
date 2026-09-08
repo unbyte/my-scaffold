@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   async getVersionMessage(releasePlan, _options) {
 {{#if releaseAll}}
     const released = releasePlan.releases.filter((release) => release.type !== 'none')
