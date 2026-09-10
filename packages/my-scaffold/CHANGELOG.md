@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.7.4
+
+### Patch Changes
+
+- 8cf99df: fix: write message.js in esm after mark workspace as module
+
 ## 0.7.3
 
 ### Patch Changes
