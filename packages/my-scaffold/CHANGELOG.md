@@ -1,5 +1,13 @@
 # @unbyte/my-scaffold
 
+## 0.7.5
+
+### Patch Changes
+
+- 4e9a786: feat: bump pnpm action to v6
+
+  it supports the devEngines.packageManager
+
 ## 0.7.4
 
 ### Patch Changes
