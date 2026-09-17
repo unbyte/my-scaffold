@@ -2,6 +2,8 @@ import { dirname, join } from 'node:path'
 import { name } from '../package.json'
 
 export enum Template {
+  CargoLayout = 'cargo-layout',
+  CargoPkg = 'cargo-pkg',
   MonorepoLayout = 'monorepo-layout',
   MonorepoPkgBin = 'monorepo-pkg-bin',
   MonorepoPkgBinLib = 'monorepo-pkg-bin-lib',
