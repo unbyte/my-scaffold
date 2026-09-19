@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.8.0
+
+### Minor Changes
+
+- afe2477: feat: add templates for cargo workspace
+
 ## 0.7.5
 
 ### Patch Changes
