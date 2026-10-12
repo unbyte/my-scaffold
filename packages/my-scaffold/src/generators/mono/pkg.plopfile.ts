@@ -1,6 +1,6 @@
 import type { Actions, NodePlopAPI } from 'plop'
 import { pnpmInstall } from '#actions/install'
-import { addPackage } from './actions'
+import { addPackage, addPackageReference } from './actions'
 import { type PromptPackageAnswer, promptPackage } from './prompts'
 
 export default function (plop: NodePlopAPI) {
@@ -14,6 +14,7 @@ export default function (plop: NodePlopAPI) {
 
       const actions: Actions = []
       actions.push(addPackage(output, answer))
+      actions.push(addPackageReference(output, answer))
       actions.push(pnpmInstall(output))
 
       return actions

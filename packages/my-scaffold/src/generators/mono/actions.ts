@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import execa from 'execa'
 import type { ActionType } from 'plop'
+import { modifyJson } from '#actions/json'
 import { resolveTemplate } from '#templates'
 import type { PromptPackageAnswer } from './prompts'
 
@@ -26,4 +27,15 @@ export function addPackage(path: string, pkg: PromptPackageAnswer): ActionType {
       binName: pkg.bin,
     },
   }
+}
+
+export function addPackageReference(path: string, pkg: PromptPackageAnswer) {
+  return modifyJson<{ references?: { path: string }[] }>(join(path, 'tsconfig.json'), (config) => {
+    const referencePath = `./packages/${pkg.directory}`
+    config.references ??= []
+    if (!config.references.some((reference) => reference.path === referencePath)) {
+      config.references.push({ path: referencePath })
+    }
+    return config
+  })
 }

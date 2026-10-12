@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "check": "pnpm check:lint && pnpm check:types",
     "check:lint": "biome check",
-    "check:types": "tsc --noEmit",
+    "check:types": "tsc --build",
     "fix": "biome check --write",
     "test": "vitest run",
     "test:update": "vitest run --update",
