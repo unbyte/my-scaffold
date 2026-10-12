@@ -15,13 +15,13 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "turbo run build"
   },
   "publishConfig": {
     "access": "public",
     "bin": {
-      "{{ binName }}": "./lib/index.js"
+      "{{ binName }}": "./lib/index.mjs"
     }
   }
 }

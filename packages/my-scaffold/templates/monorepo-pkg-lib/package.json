@@ -13,19 +13,24 @@
   "license": "MIT",
   "keywords": [],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "turbo run build"
   },
   "publishConfig": {
     "access": "public",
     "main": "lib/index.cjs",
-    "module": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "module": "lib/index.mjs",
+    "types": "lib/index.d.mts",
     "exports": {
       ".": {
-        "types": "./lib/index.d.ts",
-        "import": "./lib/index.js",
-        "require": "./lib/index.cjs"
+        "import": {
+          "types": "./lib/index.d.mts",
+          "default": "./lib/index.mjs"
+        },
+        "require": {
+          "types": "./lib/index.d.cts",
+          "default": "./lib/index.cjs"
+        }
       }
     }
   }
