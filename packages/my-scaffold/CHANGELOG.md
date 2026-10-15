@@ -1,5 +1,16 @@
 # @unbyte/my-scaffold
 
+## 0.9.0
+
+### Minor Changes
+
+- a74985b: feat: use typescript 7 and tsdown in monorepo templates
+- d08ca24: feat: use project references in monorepo templates
+
+### Patch Changes
+
+- e4ef431: chore: bump monorepo template dependencies
+
 ## 0.8.0
 
 ### Minor Changes
