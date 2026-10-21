@@ -1,5 +1,7 @@
 import { cargoInit } from './cargo/init'
 import { cargoPackage } from './cargo/pkg'
+import { changesetCi } from './changeset/ci'
+import { changesetLocal } from './changeset/local'
 import { monoInit } from './mono/init'
 import { monoPackage } from './mono/pkg'
 import { scriptInit } from './script/init'
@@ -9,6 +11,8 @@ import { viteWrangler } from './vite/wrangler'
 export const generators = {
   'cargo/init': cargoInit,
   'cargo/pkg': cargoPackage,
+  'changeset/local': changesetLocal,
+  'changeset/ci': changesetCi,
   'mono/init': monoInit,
   'mono/pkg': monoPackage,
   'script/init': scriptInit,

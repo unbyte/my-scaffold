@@ -27,7 +27,7 @@ test('discovery prints machine-readable contracts without input, toolchains, or 
   const list = cli(['list', '--json'], root)
   assert.equal(list.status, 0, list.stderr)
   const entries = JSON.parse(list.stdout) as { name: string; description: string }[]
-  assert.equal(entries.length, 7)
+  assert.equal(entries.length, 9)
   for (const generator of entries) {
     const result = cli([generator.name, '--schema'], root)
     assert.equal(result.status, 0, result.stderr)
@@ -49,7 +49,6 @@ test('file and stdin input produce equivalent scaffolds without interaction', as
       { name: '@example/core', access: 'public' },
       { name: '@example/cli', access: 'public', targets: ['bin'], bin: 'example' },
     ],
-    main: '@example/core',
   })
   await writeFile(join(root, 'input.json'), input)
   const fromFile = cli(['mono/init', 'from-file', '--input', 'input.json', '--no-install', '--no-git'], root)
@@ -60,12 +59,7 @@ test('file and stdin input produce equivalent scaffolds without interaction', as
     input,
   )
   assert.equal(fromStdin.status, 0, fromStdin.stderr)
-  for (const file of [
-    'packages/core/package.json',
-    'packages/cli/package.json',
-    'tsconfig.json',
-    '.changeset/message.js',
-  ]) {
+  for (const file of ['packages/core/package.json', 'packages/cli/package.json', 'tsconfig.json']) {
     assert.equal(
       await readFile(join(root, 'from-file', file), 'utf8'),
       await readFile(join(root, 'from-stdin', file), 'utf8'),

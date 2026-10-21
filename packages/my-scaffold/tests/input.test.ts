@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'vitest'
 import { z } from 'zod'
 import { cargoWorkspaceSchema, crateSchema, normalizeCrate } from '../src/generators/cargo/schema'
-import { monorepoSchema, normalizeMonorepo, normalizePackage, packageSchema } from '../src/generators/mono/schema'
+import { monorepoSchema, normalizePackage, packageSchema } from '../src/generators/mono/schema'
 import { scriptSchema } from '../src/generators/script/schema'
 import { viteSchema, wranglerSchema } from '../src/generators/vite/schema'
 import { Template } from '../src/templates'
@@ -37,18 +37,13 @@ test('invalid package combinations and unsafe directories are rejected', () => {
     assert.equal(packageSchema.safeParse(input).success, false, JSON.stringify(input))
 })
 
-test('monorepos validate package relationships and infer only unambiguous primary packages', () => {
+test('monorepos accept multiple packages and reject duplicate names and directories', () => {
   const core = { name: '@example/core', access: 'public' }
   const cli = { name: '@example/cli', access: 'public' }
-  assert.equal(normalizeMonorepo(monorepoSchema.parse({ packages: [core] })).main, core.name)
-  assert.equal(monorepoSchema.safeParse({ packages: [core, cli] }).success, false)
-  assert.equal(monorepoSchema.safeParse({ packages: [core], main: 'missing' }).success, false)
-  assert.equal(monorepoSchema.safeParse({ packages: [core], releaseStyle: 'all', main: core.name }).success, false)
+  assert.equal(monorepoSchema.parse({ packages: [core, cli] }).packages.length, 2)
   assert.equal(monorepoSchema.safeParse({ packages: [core, core] }).success, false)
   assert.equal(monorepoSchema.safeParse({ packages: [core, { ...cli, directory: 'CORE' }] }).success, false)
   assert.equal(monorepoSchema.safeParse({ packages: [] }).success, false)
-  assert.equal(normalizeMonorepo(monorepoSchema.parse({ packages: [core, cli], releaseStyle: 'all' })).main, undefined)
-  assert.equal(normalizeMonorepo(monorepoSchema.parse({ packages: [core, cli], main: cli.name })).main, cli.name)
 })
 
 test('Cargo defaults and constraints apply to JSON input', () => {

@@ -78,6 +78,7 @@ export async function runCli(args: string[]) {
     return
   }
 
+  const destination = resolve(target ?? process.cwd())
   let input: unknown = {}
   if (values.input !== undefined) {
     if (!values.input) throw new Error('--input requires a filename or - for stdin')
@@ -88,10 +89,9 @@ export async function runCli(args: string[]) {
         throw new Error(`Input required for ${name}. Use --input <file|-> and inspect ms ${name} --schema`)
       }
     } else {
-      input = await generator.prompt()
+      input = await generator.prompt({ target: destination })
     }
   }
-  const destination = resolve(target ?? process.cwd())
   await generator.run(input, {
     target: destination,
     install: !values['no-install'],

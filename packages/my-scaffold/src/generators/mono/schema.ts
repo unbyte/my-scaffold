@@ -49,48 +49,17 @@ export function packageDirectory(pkg: { name: string; directory?: string }) {
   return pkg.directory ?? pkg.name.split('/').pop()!
 }
 
-export function primaryCandidates(packages: PackageInput[]) {
-  const publicPackages = packages.filter((pkg) => pkg.access === 'public')
-  return publicPackages.length > 0 ? publicPackages : packages
-}
-
 export const monorepoSchema = z
-  .strictObject({
-    packages: z.array(packageSchema).min(1),
-    releaseStyle: z.enum(['primary', 'all']).default('primary'),
-    main: packageName
-      .optional()
-      .describe('Primary package; inferred only when there is one eligible package. Omit for all.'),
-  })
+  .strictObject({ packages: z.array(packageSchema).min(1) })
   .superRefine((input, context) => {
     checkPackageDuplicates(
       input.packages.map((pkg) => ({ ...pkg, directory: packageDirectory(pkg) })),
       context,
     )
-    if (input.releaseStyle === 'all') {
-      if (input.main !== undefined) {
-        context.addIssue({ code: 'custom', path: ['main'], message: 'Omit main when releaseStyle is all' })
-      }
-      return
-    }
-    const candidates = primaryCandidates(input.packages)
-    if (input.main === undefined && candidates.length > 1) {
-      context.addIssue({
-        code: 'custom',
-        path: ['main'],
-        message: 'Select a primary package when several are eligible',
-      })
-    } else if (input.main !== undefined && !candidates.some((pkg) => pkg.name === input.main)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['main'],
-        message: 'Select an existing public package, or a private package if none are public',
-      })
-    }
   })
   .meta({
-    description: 'A monorepo with unique package names and directories. Primary releases prefer public packages.',
-    examples: [{ packages: [{ name: '@example/core', access: 'public' }], releaseStyle: 'primary' }],
+    description: 'A monorepo with unique package names and directories.',
+    examples: [{ packages: [{ name: '@example/core', access: 'public' }] }],
   })
 
 export type MonorepoInput = z.input<typeof monorepoSchema>
@@ -109,13 +78,5 @@ export function normalizePackage(pkg: PackageConfig) {
     directory: packageDirectory(pkg),
     template,
     bin: pkg.access === 'public' ? pkg.bin : undefined,
-  }
-}
-
-export function normalizeMonorepo(input: z.output<typeof monorepoSchema>) {
-  return {
-    packages: input.packages.map(normalizePackage),
-    releaseStyle: input.releaseStyle,
-    main: input.releaseStyle === 'primary' ? (input.main ?? primaryCandidates(input.packages)[0].name) : undefined,
   }
 }

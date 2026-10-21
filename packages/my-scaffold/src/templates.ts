@@ -3,6 +3,8 @@ import { join } from 'node:path'
 export enum Template {
   CargoLayout = 'cargo-layout',
   CargoPkg = 'cargo-pkg',
+  ChangesetLocal = 'changeset-local',
+  ChangesetCi = 'changeset-ci',
   MonorepoLayout = 'monorepo-layout',
   MonorepoPkgBin = 'monorepo-pkg-bin',
   MonorepoPkgBinLib = 'monorepo-pkg-bin-lib',

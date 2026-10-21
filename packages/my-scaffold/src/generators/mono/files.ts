@@ -1,21 +1,11 @@
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import execa from 'execa'
 import { checkDirectory, pathStats } from '../../actions/files'
 import { modifyJson, readJson } from '../../actions/json'
 import { renderTemplate } from '../../actions/template'
 import type { normalizePackage } from './schema'
 
 type Package = ReturnType<typeof normalizePackage>
-
-export function resolveDefaultBranch() {
-  try {
-    const { stdout } = execa.sync('git', ['config', '--get', 'init.defaultBranch'], { stdin: 'ignore' })
-    return stdout.trim() || 'master'
-  } catch {
-    return 'master'
-  }
-}
 
 export async function checkMonorepo(path: string, pkg: Package) {
   await checkDirectory(path)
@@ -31,16 +21,25 @@ export async function checkMonorepo(path: string, pkg: Package) {
   )
     throw new Error('Expected tsconfig.json references to be an array of project paths')
 
+  for (const existing of await listPackages(path)) {
+    if (existing.manifest.name === pkg.name) throw new Error(`Package ${pkg.name} already exists in the workspace`)
+  }
+}
+
+export async function listPackages(path: string) {
   const packages = join(path, 'packages')
   await checkDirectory(packages)
-  if (!(await pathStats(packages))) return
-  for (const entry of await readdir(packages, { withFileTypes: true })) {
+  if (!(await pathStats(packages))) return []
+  const result = []
+  const entries = await readdir(packages, { withFileTypes: true })
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (!entry.isDirectory()) continue
-    const manifest = join(packages, entry.name, 'package.json')
-    if (!(await pathStats(manifest))) continue
-    const existing = await readJson<{ name?: string }>(manifest)
-    if (existing.name === pkg.name) throw new Error(`Package ${pkg.name} already exists in the workspace`)
+    const path = join(packages, entry.name, 'package.json')
+    if (!(await pathStats(path))) continue
+    const manifest = await readJson<{ name?: string; private?: boolean }>(path)
+    result.push({ path, directory: `packages/${entry.name}`, manifest })
   }
+  return result
 }
 
 export async function addPackage(path: string, pkg: Package) {

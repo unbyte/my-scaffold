@@ -28,9 +28,7 @@ Example `scaffold.json`:
   "packages": [
     { "name": "@example/core", "access": "public", "targets": ["lib"] },
     { "name": "@example/cli", "access": "public", "targets": ["bin"], "bin": "example" }
-  ],
-  "releaseStyle": "primary",
-  "main": "@example/core"
+  ]
 }
 ```
 
@@ -55,11 +53,13 @@ ms mono/init --schema
 
 `list --json` prints names and descriptions. `--help` includes an input example. `--schema` prints only the generator's input JSON Schema on stdout. Discovery does not require a destination, interactive input, Rust, Git, or pnpm subprocesses.
 
-Schemas describe types, allowed fields, static defaults, and input examples. Runtime validation also enforces relationships such as unique package names and directories, valid primary packages, and conditional binary names. Some of these rules cannot be represented by JSON Schema; field and generator descriptions document them.
+Schemas describe types, allowed fields, static defaults, and input examples. Runtime validation also enforces relationships such as unique package names and directories, matching pnpm versions, and conditional binary names. Some of these rules cannot be represented by JSON Schema; field and generator descriptions document them.
 
 | Generator | Input |
 | --- | --- |
-| `mono/init` | `packages`, optional `releaseStyle` (`primary` by default), and `main` when several primary packages are eligible |
+| `mono/init` | `packages` |
+| `changeset/local` | `baseBranch`; targets a workspace created by `mono/init` |
+| `changeset/ci` | `repository` (`owner/repo`), `baseBranch`; optional `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
 | `mono/pkg` | `name`, `access` (`public` or `private`), optional `directory`; public packages also accept `targets` and `bin` |
 | `cargo/init` | `packages`, containing crate inputs |
 | `cargo/pkg` | `name`, optional `directory`, `publish` (false by default), and `targets` (`["lib"]` by default) |
@@ -68,8 +68,6 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | `vite/wrangler` | `{}`; targets an existing project with `package.json`; no input file needed |
 
 Package directories default to the unscoped npm name or crate name. Each directory must be a single portable name inside `packages/` or `crates/`. Public npm packages default to `targets: ["lib"]`. A `bin` name is required exactly when `targets` includes `bin`. Private npm packages accept neither `targets` nor `bin`.
-
-For primary monorepo releases, public packages are eligible if any exist; otherwise private packages are eligible. A sole eligible package is inferred. With several candidates, specify `main`. With `releaseStyle: "all"`, omit `main`.
 
 A minimal Cargo input is:
 
@@ -82,6 +80,42 @@ A minimal Vite input is:
 ```json
 { "template": "react-ts" }
 ```
+
+## Set up releases
+
+After `mono/init`, choose one Changesets setup at the workspace root:
+
+```sh
+ms changeset/local ./my-project
+# Or use GitHub Actions:
+ms changeset/ci ./my-project
+```
+
+Both use the all-packages release style. Changesets determines which packages need releases from your changeset files; private packages are not versioned. Existing Changesets configuration and release workflows are preserved: the generators fail on conflicts rather than converting an existing setup.
+
+For local releases, provide the release branch:
+
+```json
+{ "baseBranch": "main" }
+```
+
+`changeset/local` installs Changesets and adds a commit hook. Running `pnpm exec changeset version` updates versions and changelogs and creates a `chore: release packages` commit listing the released packages. Build and publish locally when ready.
+
+For GitHub Actions, provide the repository and release branch:
+
+```json
+{
+  "repository": "example/project",
+  "baseBranch": "main",
+  "pnpmVersion": "11.21.0"
+}
+```
+
+`changeset/ci` adds `.github/workflows/release.yml`, GitHub changelogs, and repository metadata for public packages under `packages/`. It uses Changesets 3 and upgrades an existing Changesets dependency to that version range. The workflow opens version PRs, builds and packs packages, then publishes the prepared packages to npm and creates GitHub releases.
+
+Omit `pnpmVersion` when the root `package.json` already pins an exact pnpm version through `packageManager`. Otherwise provide one; setup records the pin. An explicit version must match an existing pin. Release jobs use Node 24 by default; `nodeVersion` also accepts `"22"` and `"26"`. The build defaults to the root `build` script; choose another script with `buildScript`, or set it to `false` for packages that need no build. The default npm access is `public`; `access: "restricted"` changes that default, while individual package `publishConfig.access` settings take precedence.
+
+Before publishing, allow GitHub Actions to create pull requests in the repository settings and configure an [npm trusted publisher](https://docs.npmjs.com/trusted-publishers) for each package, pointing to `release.yml` with direct publishing enabled. The generated `.changeset/README.md` includes setup instructions. Commit the generated files and updated lockfile; run `pnpm install` first if you used `--no-install`.
 
 ## External commands
 

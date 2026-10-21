@@ -9,7 +9,7 @@ export interface GeneratorContext {
 export function defineGenerator<S extends z.ZodType>(definition: {
   description: string
   schema: S
-  prompt?: () => Promise<z.input<S>>
+  prompt?: (context: Pick<GeneratorContext, 'target'>) => Promise<z.input<S>>
   generate: (input: z.output<S>, context: GeneratorContext) => Promise<void>
 }) {
   return {

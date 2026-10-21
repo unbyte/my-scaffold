@@ -5,7 +5,7 @@ import { test } from 'vitest'
 import { getGenerator } from '../src/generators'
 import { fixture } from './fixture'
 
-test('monorepo generators accept complete input and produce packages, references, and release configuration', async (t) => {
+test('monorepo generators accept complete input and produce packages and references', async (t) => {
   const target = join(await fixture(t), 'project')
   const context = { target, install: false, git: false }
   await getGenerator('mono/init').run(
@@ -14,14 +14,12 @@ test('monorepo generators accept complete input and produce packages, references
         { name: '@example/core', access: 'public' },
         { name: '@example/cli', access: 'public', targets: ['bin'], bin: 'example' },
       ],
-      main: '@example/core',
     },
     context,
   )
   const cli = JSON.parse(await readFile(join(target, 'packages/cli/package.json'), 'utf8'))
   assert.equal(cli.name, '@example/cli')
   assert.equal(cli.bin.example, './src/index.ts')
-  assert.ok((await readFile(join(target, '.changeset/message.js'), 'utf8')).includes('@example/core'))
   await getGenerator('mono/pkg').run({ name: '@example/internal', access: 'private' }, context)
   const config = JSON.parse(await readFile(join(target, 'tsconfig.json'), 'utf8'))
   assert.deepEqual(config.references, [

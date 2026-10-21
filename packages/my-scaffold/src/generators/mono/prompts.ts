@@ -1,13 +1,5 @@
 import { buildTargets, directoryName, validateWith } from '../input'
-import {
-  binaryName,
-  type MonorepoInput,
-  monorepoSchema,
-  type PackageInput,
-  packageDirectory,
-  packageName,
-  primaryCandidates,
-} from './schema'
+import { binaryName, type MonorepoInput, type PackageInput, packageDirectory, packageName } from './schema'
 
 export async function promptPackage(): Promise<PackageInput> {
   const { default: inquirer } = await import('inquirer')
@@ -61,22 +53,5 @@ export async function promptMonorepoInit(): Promise<MonorepoInput> {
     ])
     addMore = continueAdding
   }
-  const { releaseStyle } = await inquirer.prompt<{ releaseStyle: 'primary' | 'all' }>([
-    {
-      type: 'list',
-      name: 'releaseStyle',
-      message: 'Select release commit message style',
-      default: monorepoSchema.shape.releaseStyle.parse(undefined),
-      choices: [
-        { name: 'only primary  (chore(release): <version>)', value: 'primary', short: 'primary' },
-        { name: 'all packages  (chore: release packages)', value: 'all', short: 'all' },
-      ],
-    },
-  ])
-  const candidates = primaryCandidates(packages)
-  if (releaseStyle === 'all' || candidates.length === 1) return { packages, releaseStyle }
-  const { main } = await inquirer.prompt<{ main: string }>([
-    { type: 'list', name: 'main', message: 'Select the primary package', choices: candidates.map((pkg) => pkg.name) },
-  ])
-  return { packages, releaseStyle, main }
+  return { packages }
 }
