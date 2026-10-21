@@ -1,74 +1,74 @@
-# CLAUDE.md
+# my-scaffold
 
-## What this is
-
-`@unbyte/my-scaffold` is a CLI (`ms`) that scaffolds the author's personal project layouts. It's a thin wrapper around [Plop](https://plopjs.com): the CLI dispatches to one of several Plop generators, each of which prompts the user (via inquirer) and copies a template tree into the target directory.
-
-This repo is itself a pnpm + Turbo monorepo, but currently contains a single package: `packages/my-scaffold`.
+`@unbyte/my-scaffold` is the `ms` CLI for personal project layouts. This pnpm + Turbo monorepo contains one package, `packages/my-scaffold`.
 
 ## Commands
 
-Run from the repo root:
+Run from the repository root:
 
-- `pnpm build` — build all packages via Turbo (delegates to `tsup` per package).
-- `pnpm check` — Biome lint/format check (does **not** typecheck or run `tsc`).
-- `pnpm fix` — Biome autofix + organize imports. Also runs automatically on staged `*.{ts,json}` via the lefthook pre-commit hook.
+- `pnpm build` — bundle the CLI with tsup through Turbo.
+- `pnpm check` — Biome lint and formatting checks.
+- `pnpm check:types` — TypeScript checks for source and tests.
+- `pnpm test` — Vitest tests under `packages/*/tests/`. Generated template tests are excluded.
+- `pnpm fix` — Biome autofix and import organization; also runs on staged TypeScript and JSON through lefthook.
+- `pnpm go <generator> [target-dir]` — run the source CLI through tsx.
 
-There are no tests in this repo (the `tsc`/vitest scripts you may see live inside the *generated template*, `templates/monorepo-layout/package.json`, not here).
+For a generator smoke check, use a disposable directory under `playground/` (gitignored):
 
-To run the CLI locally without building, use the `go` script (runs the source entry via `tsx`):
-
-```
-pnpm go <generator> [target-dir]
-# e.g.
-pnpm go mono/init ./tmp-out
-```
-
-**Trying a generator end-to-end.** Generators write into the target dir (cwd when no target is given), so run them inside a throwaway subdir under `playground/` (gitignored) and inspect the result there:
-
-```
-mkdir -p playground/foo
-cd playground/foo
-tsx ../../packages/my-scaffold/src <generator> .
-# equivalently, from the repo root:
-pnpm go <generator> ./playground/foo
+```sh
+pnpm go mono/init ./playground/example --input scaffold.json --no-install --no-git
+pnpm go mono/init --schema
 ```
 
-The generated tree (including its own `node_modules` and `.git`) is disposable — delete the subdir when done. Generators that delegate to an interactive scaffolder via `pnpmCreate` (e.g. `vite/init` runs `pnpm create vite`) need a TTY; feeding such a run `</dev/null` makes the underlying tool fall back to its defaults, which is handy for a non-interactive smoke test.
+Input files are resolved relative to the invocation's working directory. `--input -` reads JSON from stdin. Generators never prompt when input is supplied. Without input, prompts require a terminal; generators with empty input schemas can run unattended.
 
-Releases use Changesets (`baseBranch: master`); the release commit message is forced to `chore(release): <version>` by `.changeset/message.js`, keyed off the `@unbyte/my-scaffold` version.
+`--no-install` skips pnpm installation, not create-vite or Cargo lockfile updates. `--no-git` skips Git initialization. Tests create isolated directories under `playground/` and remove them when finished. Real Cargo and Vite smoke checks require the corresponding toolchains and may access the network.
+
+Releases use Changesets with `baseBranch: master`. `.changeset/message.js` owns release commit messages. Do not create release commits manually.
 
 ## Architecture
 
-**Dispatch (`src/index.ts`).** Parses argv with minimist. `args._[0]` is the generator name; `args._[1]` is an optional target dir (defaults to cwd). The generator name maps directly to a plopfile path: `generators/<name>.plopfile`. The list of valid names lives in the `generators` array — **this array is the source of truth and must be kept in sync** with the actual plopfiles. Plop runs programmatically with `dest` set to the resolved target.
+**CLI (`src/index.ts`, `src/cli.ts`).** The entry handles errors and exit status. The CLI uses Node's strict argument parser, selects interactive or JSON input, and invokes the generator. `ms list --json`, per-generator `--help`, and `--schema` are discovery commands and must not inspect the destination or invoke external tools.
 
-**Generators (`src/generators/<group>/<name>.plopfile.ts`).** Each plopfile default-exports a `(plop: NodePlopAPI) => void` that registers one generator with `prompts` + an `actions(answer)` callback returning an array of Plop actions. Generator names are slash-namespaced (`mono/init`, `mono/pkg`, `script/init`) and the slash maps to the directory layout. Prompts are factored into sibling `prompts.ts` files; the answer object is cast to a typed interface inside `actions`.
+**Registry (`src/generators/index.ts`).** This object is the single source of truth for generator names, descriptions, input schemas, prompts, and implementations. Use explicit imports; generators do not need separate build entries.
 
-**Reusable actions (`src/actions/`).** Factory functions returning Plop `ActionType`s, shared across generators:
-- `addTemplate` / `addPackage` — Plop `addMany` from a template dir (Handlebars-interpolated).
-- `modifyJson` / `mergeJson` — read a JSON file and rewrite it (2-space, trailing newline). `modifyJson` applies a callback; `mergeJson` deep-merges a *source* JSON file into the target (nested objects merge key-by-key, source scalars/arrays win). Used to fold a template's partial `package.json` into the one a scaffolder generated.
-- `renameDotfiles` — recursively renames `_foo` → `.foo` after files are copied (see Templates below).
-- `pnpmInstall`, `gitInit` — shell out via `execa`.
-- `pnpmCreate(path, args)` — runs `pnpm create <args>` with the TTY inherited (and ensures `path` exists first), so a generator can delegate to an interactive scaffolder like `pnpm create vite`.
+**Generator contract (`src/generator.ts`).** `defineGenerator` couples a Zod schema to an optional prompt function and a typed async `generate` function. Its `run` method accepts unknown input, validates it, and only then invokes generation. Context contains the resolved target and the `install` and `git` options. There is no action format or execution interpreter: generators call ordinary helpers in sequence.
 
-**Templates (`templates/<name>/`).** Plain file trees copied verbatim except for Handlebars placeholders like `{{ pkgName }}` and `{{ binName }}`, filled from the `data` passed to `addMany`. Two conventions matter:
-- **Dotfiles are stored with a `_` prefix** (`_gitignore`, `_github/`, `_changeset/`) so they survive packaging and git, then `renameDotfiles` restores the leading dot at generation time. Any new dotfile in a template must use this prefix.
-- Templates are **excluded from Biome** (`!**/templates` in `biome.json`) and are **not** type-checked or bundled, so their `.ts` files can reference dependencies that don't exist in this repo.
+**Input (`src/generators/<group>/schema.ts`, `src/input.ts`).** Each generator declares a public, strict Zod input schema. Infer input and parsed types from schemas. Reuse domain schemas between initialization and package generators. Keep public input exportable with `z.toJSONSchema(schema, { io: 'input' })`; descriptions must explain runtime constraints that JSON Schema cannot represent. Store static defaults in schemas. Derive directory names, internal template choices, and primary package selection in normalization functions. Read environment-dependent values in generation preparation.
 
-`Template` is an enum in `src/templates.ts` mapping each variant to its directory name. `resolveTemplate` locates the templates dir via `require.resolve('@unbyte/my-scaffold/package.json')`, which resolves correctly both in dev (against `src`) and from the published package (against `lib` + bundled `templates`).
+**Prompts (`src/generators/<group>/prompts.ts`).** Collect the same public input shape accepted from JSON. Import Inquirer lazily so discovery and unattended generation do not load the prompt library. Reuse schema validators and defaults for prompt feedback. Prompts do not select internal templates, write files, or execute commands. Final validation remains authoritative for both input sources.
 
-**Build (`tsup.config.ts`).** Bundles to CJS in `lib/`. The entry list is `src/index.ts` **plus** `src/generators/**/*.plopfile.ts` — the plopfiles must be separate entries because they're loaded at runtime via `require.resolve`, not statically imported. A new generator therefore needs no tsup change (the glob covers it) but does need a `lib/index.js` shim only via the `generators` array registration.
+**Generators (`src/generators/<group>/*.ts`).** Normalize validated input, check workspace prerequisites, and perform generation through direct async calls. Group-specific file helpers live beside the generators. Complete checks that can be performed upfront before modifying files. Propagate failures; generation does not promise rollback.
 
-The package uses Node subpath imports (`#templates`, `#actions/*`) declared in `packages/my-scaffold/package.json`. The published `bin` is overridden to `./lib/index.js` via `publishConfig`.
+**Shared helpers.**
+
+- `src/template.ts` copies template trees using Handlebars. It renders text, preserves binary files and executable bits, maps `_` path segments to dotfiles, and checks all destinations for that template before writing. It rejects existing files and symlink traversal inside the target.
+- `src/files.ts` checks directories and new destination paths.
+- `src/json.ts` reads and modifies regular JSON files, writes two-space indentation with a trailing newline, and merges objects recursively with source scalars and arrays taking precedence.
+- `src/commands.ts` runs commands with explicit working directories and closed stdin. Errors propagate. Generators decide whether to install dependencies or initialize Git; declaring dependencies must not depend on installation being enabled.
+
+## Templates and build
+
+Templates live in `packages/my-scaffold/templates/<name>/`. `Template` in `src/templates.ts` maps variants to directory names. Template resolution is relative to `src/` in development and `lib/` in the published package; it must work without a package self-link.
+
+Store template dotfiles with `_` prefixes (`_gitignore`, `_github/`, `_changeset/`). The copier changes these path segments during copying, without recursively renaming unrelated destination files. Handlebars variables must match the data supplied by the generator. Missing variables fail rendering.
+
+Templates are excluded from Biome and source type checks. Dependencies and tests inside them belong to generated projects, not this repository.
+
+`tsup.config.ts` bundles `src/index.ts` into one CommonJS executable in `lib/`, targeting Node 18. The package publishes `lib/` and `templates/`; `publishConfig.bin` points to `lib/index.js`. Runtime dependencies must be declared directly. The CLI requires Node 18.3+; development tools and generated projects can require newer versions.
 
 ## Adding a generator
 
-1. Create `src/generators/<group>/<name>.plopfile.ts` (default-export a function registering the generator) and a `prompts.ts` beside it.
-2. Add `'<group>/<name>'` to the `generators` array in `src/index.ts`.
-3. Reuse actions from `src/actions/` and `src/generators/<group>/actions.ts` where possible.
+1. Define a strict public input schema with descriptions and an example; reuse existing domain schemas where appropriate.
+2. Add an optional prompt adapter returning the schema's input shape.
+3. Define the generator with `defineGenerator` and an async generation function. Validate through `run` before side effects and keep environment checks out of module initialization.
+4. Add it to the registry. No build entry change is needed.
+5. Test input constraints, resulting files, and relevant failure behavior. Ensure schema export and CLI discovery work without external tools.
 
 ## Adding a template
 
-1. Create `templates/<name>/` with the file tree; use `_`-prefixed names for dotfiles.
-2. Add the variant to the `Template` enum in `src/templates.ts`.
-3. Reference Handlebars vars (`{{ pkgName }}`, etc.) matching the `data` your action passes to `addMany`.
+1. Create the template tree with `_`-prefixed dotfiles.
+2. Register its directory in the `Template` enum.
+3. Supply all rendering variables through `renderTemplate` and test meaningful output behavior.
+
+See `packages/my-scaffold/README.md` for CLI usage and input examples.

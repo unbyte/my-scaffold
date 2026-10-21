@@ -32,7 +32,6 @@
     "handlebars": "^4.7.9",
     "inquirer": "^9.3.8",
     "isbinaryfile": "^5.0.7",
-    "minimist": "^1.2.8",
     "zod": "^4.6.7"
   },
   "publishConfig": {
@@ -42,6 +41,6 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18.3.0"
   }
 }
