@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { chmod, mkdir, readdir, readFile, stat, symlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { test } from 'node:test'
+import { test } from 'vitest'
 import { runCommand } from '../src/commands'
 import { checkNewPath } from '../src/files'
 import { mergeJson, modifyJson } from '../src/json'

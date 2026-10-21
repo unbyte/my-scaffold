@@ -7,7 +7,7 @@
     "check": "biome check",
     "fix": "biome check --write",
     "check:types": "tsc --noEmit",
-    "test": "node --import tsx --test packages/my-scaffold/tests/*.test.ts"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.9",
@@ -19,7 +19,8 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "turbo": "^2.9.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   },
   "packageManager": "pnpm@11.9.0"
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
+import { test } from 'vitest'
 import { z } from 'zod'
 import { cargoWorkspaceSchema, crateSchema, normalizeCrate } from '../src/generators/cargo/schema'
 import { monorepoSchema, normalizeMonorepo, normalizePackage, packageSchema } from '../src/generators/mono/schema'
