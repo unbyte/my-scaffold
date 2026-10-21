@@ -58,8 +58,8 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | Generator | Input |
 | --- | --- |
 | `mono/init` | `packages` |
-| `changeset/local` | `baseBranch`; targets a workspace created by `mono/init` |
-| `changeset/ci` | `baseBranch`; optional `repository` (`owner/repo`, inferred from Git origin), `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
+| `changeset/local` | Optional `baseBranch` (inferred from Git origin HEAD); targets a workspace created by `mono/init` |
+| `changeset/ci` | Optional `baseBranch` (inferred from Git origin HEAD), `repository` (`owner/repo`, inferred from Git origin), `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
 | `mono/pkg` | `name`, `access` (`public` or `private`), optional `directory`; public packages also accept `targets` and `bin` |
 | `cargo/init` | `packages`, containing crate inputs |
 | `cargo/pkg` | `name`, optional `directory`, `publish` (false by default), and `targets` (`["lib"]` by default) |
@@ -93,7 +93,9 @@ ms changeset/ci ./my-project
 
 Both use the all-packages release style. Changesets determines which packages need releases from your changeset files; private packages are not versioned. Existing Changesets configuration and release workflows are preserved: the generators fail on conflicts rather than converting an existing setup.
 
-For local releases, provide the release branch:
+Both generators infer the release branch from the locally recorded `origin/HEAD` at the target Git root. They do not contact the remote or use the current checkout branch, which may be a feature branch. An explicit `baseBranch` takes precedence. If the remote default is unavailable, interactive setup asks for the branch; JSON input must supply it.
+
+To specify the release branch explicitly:
 
 ```json
 { "baseBranch": "main" }
@@ -101,7 +103,7 @@ For local releases, provide the release branch:
 
 `changeset/local` installs Changesets and adds a commit hook. Running `pnpm exec changeset version` updates versions and changelogs and creates a `chore: release packages` commit listing the released packages. Build and publish locally when ready.
 
-For GitHub Actions, provide the release branch. The repository is inferred from the target’s Git `origin` remote when the target is the Git root. HTTPS, SSH, and Git URLs on `github.com` are supported. An explicit `repository` overrides inference. If Git or a suitable remote is unavailable, interactive setup asks for the repository; JSON input must supply it. A parent checkout’s remote is never inherited.
+For GitHub Actions, the repository is inferred from the target’s Git `origin` remote when the target is the Git root. HTTPS, SSH, and Git URLs on `github.com` are supported. An explicit `repository` overrides inference. If Git or a suitable remote is unavailable, interactive setup asks for the repository; JSON input must supply it. A parent checkout’s remote is never inherited.
 
 To specify the repository explicitly:
 

@@ -6,7 +6,7 @@ import execa from 'execa'
 import { test } from 'vitest'
 import { readJson } from '../src/actions/json'
 import { getGenerator } from '../src/generators'
-import { parseGitHubRemote } from '../src/generators/changeset/repository'
+import { parseGitHubRemote } from '../src/generators/changeset/git'
 import { ciSchema, localSchema } from '../src/generators/changeset/schema'
 import { fixture } from './fixture'
 
@@ -288,5 +288,58 @@ test('unusable remotes require explicit input without changing the workspace', a
     )
     const config = await readJson(join(target, '.changeset/config.json'))
     assert.deepEqual(config.changelog, ['@changesets/changelog-github', { repo: 'explicit/project' }])
+  }
+})
+
+test('both release setups infer origin HEAD independently of the checkout and accept an override', async (t) => {
+  const root = await fixture(t)
+  for (const generator of ['changeset/local', 'changeset/ci']) {
+    for (const baseBranch of [undefined, 'release/custom']) {
+      const target = join(root, generator, baseBranch === undefined ? 'inferred' : 'explicit')
+      const context = await createWorkspace(target)
+      await execa('git', ['init', '--quiet', target])
+      await execa('git', ['symbolic-ref', 'HEAD', 'refs/heads/feature/work'], { cwd: target })
+      await execa('git', ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/release/stable'], {
+        cwd: target,
+      })
+      const input =
+        generator === 'changeset/ci'
+          ? { baseBranch, repository: 'example/project', pnpmVersion: '11.21.0' }
+          : { baseBranch }
+      await getGenerator(generator).run(input, context)
+      const expected = baseBranch ?? 'release/stable'
+      const config = await readJson(join(target, '.changeset/config.json'))
+      assert.equal(config.baseBranch, expected)
+      if (generator === 'changeset/ci') {
+        const workflow = await readFile(join(target, '.github/workflows/release.yml'), 'utf8')
+        assert.ok(workflow.includes(`      - "${expected}"`))
+      }
+    }
+  }
+})
+
+test('missing origin HEAD and parent checkout defaults require an explicit release branch before writes', async (t) => {
+  const root = await fixture(t)
+  await execa('git', ['init', '--quiet', root])
+  await execa('git', ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/parent-branch'], { cwd: root })
+  for (const generator of ['changeset/local', 'changeset/ci']) {
+    for (const kind of ['nested', 'missing', 'wrong-remote']) {
+      const target = join(root, generator, kind)
+      const context = await createWorkspace(target)
+      if (kind !== 'nested') {
+        await execa('git', ['init', '--quiet', target])
+        await execa('git', ['symbolic-ref', 'HEAD', 'refs/heads/feature/work'], { cwd: target })
+      }
+      if (kind === 'wrong-remote') {
+        await execa('git', ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/upstream/main'], { cwd: target })
+      }
+      const input = generator === 'changeset/ci' ? { repository: 'example/project', pnpmVersion: '11.21.0' } : {}
+      const before = await readFile(join(target, 'package.json'), 'utf8')
+      await assert.rejects(getGenerator(generator).run(input, context), /provide baseBranch/)
+      assert.equal(await readFile(join(target, 'package.json'), 'utf8'), before)
+      assert.ok(!(await readdir(target)).includes('.changeset'))
+      await getGenerator(generator).run({ ...input, baseBranch: 'master' }, context)
+      assert.equal((await readJson(join(target, '.changeset/config.json'))).baseBranch, 'master')
+    }
   }
 })

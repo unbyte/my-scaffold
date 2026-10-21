@@ -1,6 +1,6 @@
 import { realpath } from 'node:fs/promises'
 import execa from 'execa'
-import { repository } from './schema'
+import { baseBranch, repository } from './schema'
 
 export function parseGitHubRemote(remote: string) {
   let path: string
@@ -28,12 +28,33 @@ export function parseGitHubRemote(remote: string) {
 }
 
 export async function inferRepository(target: string) {
+  const remote = await readGit(target, ['remote', 'get-url', 'origin'])
+  return remote === undefined ? undefined : parseGitHubRemote(remote)
+}
+
+export async function inferBaseBranch(target: string) {
+  const ref = await readGit(target, ['symbolic-ref', '--quiet', 'refs/remotes/origin/HEAD'])
+  const prefix = 'refs/remotes/origin/'
+  if (!ref?.startsWith(prefix)) return undefined
+  const result = baseBranch.safeParse(ref.slice(prefix.length))
+  return result.success ? result.data : undefined
+}
+
+export async function resolveBaseBranch(target: string, explicit?: string) {
+  const branch = explicit ?? (await inferBaseBranch(target))
+  if (branch === undefined) {
+    throw new Error('Could not infer the release branch from origin/HEAD at the target Git root; provide baseBranch')
+  }
+  return branch
+}
+
+async function readGit(target: string, args: string[]) {
   try {
     const options = { cwd: target, stdin: 'ignore' as const }
     const root = await execa('git', ['rev-parse', '--show-toplevel'], options)
     if ((await realpath(root.stdout.trim())) !== (await realpath(target))) return undefined
-    const remote = await execa('git', ['remote', 'get-url', 'origin'], options)
-    return parseGitHubRemote(remote.stdout.trim())
+    const result = await execa('git', args, options)
+    return result.stdout.trim()
   } catch {
     return undefined
   }

@@ -22,7 +22,13 @@ export const repository = z
 export const pnpmVersion = z.string().regex(/^\d+\.\d+\.\d+$/, 'Enter an exact pnpm version, such as 11.21.0')
 export const buildScript = z.string().regex(/^[a-zA-Z][a-zA-Z0-9:_-]*$/, 'Enter a package.json script name')
 
-export const localSchema = z.strictObject({ baseBranch }).meta({
+const releaseBranch = baseBranch
+  .optional()
+  .describe(
+    'Release branch; inferred from local origin/HEAD when the target is the Git root. Explicit input overrides inference; required if inference fails. The current checkout branch is not used.',
+  )
+
+export const localSchema = z.strictObject({ baseBranch: releaseBranch }).meta({
   description: 'Set up local Changesets releases with an all-packages release commit message.',
   examples: [{ baseBranch: 'main' }],
 })
@@ -34,7 +40,7 @@ export const ciSchema = z
       .describe(
         'GitHub owner/repository; inferred from origin when the target is the Git root. Explicit input overrides inference; required if inference fails.',
       ),
-    baseBranch,
+    baseBranch: releaseBranch,
     access: z.enum(['public', 'restricted']).default('public').describe('Default npm access for published packages'),
     nodeVersion: z.enum(['22', '24', '26']).default('24').describe('Node.js major version for release jobs'),
     pnpmVersion: pnpmVersion

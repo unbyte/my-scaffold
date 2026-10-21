@@ -6,8 +6,8 @@ import { Template } from '../../templates'
 import { defineGenerator } from '../definition'
 import { listPackages } from '../mono/files'
 import { checkSetup, configureProject, pinnedPnpmVersion } from './files'
+import { inferRepository, resolveBaseBranch } from './git'
 import { promptCi } from './prompts'
-import { inferRepository } from './repository'
 import { ciSchema } from './schema'
 
 export const changesetCi = defineGenerator({
@@ -26,6 +26,7 @@ export const changesetCi = defineGenerator({
       )
     }
     const pinned = pinnedPnpmVersion(pkg.packageManager)
+    const baseBranch = await resolveBaseBranch(context.target, input.baseBranch)
     const pnpmVersion = input.pnpmVersion ?? pinned
     if (pnpmVersion === undefined) throw new Error('Provide pnpmVersion or pin pnpm in package.json packageManager')
     if (pinned !== undefined && pnpmVersion !== pinned) {
@@ -37,7 +38,7 @@ export const changesetCi = defineGenerator({
     await renderTemplate(context.target, Template.ChangesetCi, {
       repository,
       repositoryJson: JSON.stringify(repository),
-      baseBranchJson: JSON.stringify(input.baseBranch),
+      baseBranchJson: JSON.stringify(baseBranch),
       accessJson: JSON.stringify(input.access),
       nodeVersionJson: JSON.stringify(input.nodeVersion),
       buildScript: input.buildScript,
