@@ -1,26 +1,20 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import type { ActionType } from 'plop'
+import { pathStats } from './files'
 
-export function modifyJson<T = Record<string, unknown>>(
-  path: string,
-  modifier: (json: T) => T | undefined,
-): ActionType {
-  return async () => {
-    const json = JSON.parse(await readFile(path, 'utf8')) as T
-    const result = modifier(json) ?? json
-    await writeFile(path, `${JSON.stringify(result, null, 2)}\n`)
-    return `modified ${path}`
-  }
+export async function readJson<T = Record<string, unknown>>(path: string): Promise<T> {
+  const stats = await pathStats(path)
+  if (!stats?.isFile()) throw new Error(`Expected a regular JSON file: ${path}`)
+  return JSON.parse(await readFile(path, 'utf8')) as T
 }
 
-export function mergeJson(targetPath: string, sourcePath: string): ActionType {
-  return async () => {
-    const source = JSON.parse(await readFile(sourcePath, 'utf8'))
-    const target = JSON.parse(await readFile(targetPath, 'utf8'))
-    const result = deepMerge(target, source) as Record<string, unknown>
-    await writeFile(targetPath, `${JSON.stringify(result, null, 2)}\n`)
-    return `merged ${targetPath}`
-  }
+export async function modifyJson<T = Record<string, unknown>>(path: string, modifier: (json: T) => T) {
+  const result = modifier(await readJson<T>(path))
+  await writeFile(path, `${JSON.stringify(result, null, 2)}\n`)
+}
+
+export async function mergeJson(targetPath: string, sourcePath: string) {
+  const source = await readJson(sourcePath)
+  await modifyJson(targetPath, (target) => deepMerge(target, source) as Record<string, unknown>)
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -29,9 +23,14 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function deepMerge(target: unknown, source: unknown): unknown {
   if (!isPlainObject(target) || !isPlainObject(source)) return source
-  const result: Record<string, unknown> = { ...target }
+  const result = { ...target }
   for (const [key, value] of Object.entries(source)) {
-    result[key] = key in result ? deepMerge(result[key], value) : value
+    Object.defineProperty(result, key, {
+      value: Object.hasOwn(target, key) ? deepMerge(target[key], value) : value,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    })
   }
   return result
 }
