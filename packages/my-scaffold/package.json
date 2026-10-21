@@ -12,10 +12,6 @@
     "name": "unbyte",
     "url": "https://github.com/unbyte"
   },
-  "imports": {
-    "#templates": "./src/templates.ts",
-    "#actions/*": "./src/actions/*.ts"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/unbyte/my-scaffold.git"
@@ -33,8 +29,10 @@
   },
   "dependencies": {
     "execa": "^5",
+    "handlebars": "^4.7.9",
+    "inquirer": "^9.3.8",
+    "isbinaryfile": "^5.0.7",
     "minimist": "^1.2.8",
-    "plop": "^4.0.5",
     "zod": "^4.6.7"
   },
   "publishConfig": {

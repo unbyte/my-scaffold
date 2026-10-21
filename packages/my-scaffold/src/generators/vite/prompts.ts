@@ -1,11 +1,9 @@
-export type PromptViteInitAnswer = Record<string, never>
+import type { z } from 'zod'
+import { type viteSchema, viteTemplate } from './schema'
 
-export async function promptViteInit(): Promise<PromptViteInitAnswer> {
-  return {}
-}
-
-export type PromptViteWranglerAnswer = Record<string, never>
-
-export async function promptViteWrangler(): Promise<PromptViteWranglerAnswer> {
-  return {}
+export async function promptViteInit() {
+  const { default: inquirer } = await import('inquirer')
+  return inquirer.prompt<z.input<typeof viteSchema>>([
+    { type: 'list', name: 'template', message: 'Select Vite template', choices: viteTemplate.options },
+  ])
 }

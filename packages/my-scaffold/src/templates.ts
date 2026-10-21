@@ -1,5 +1,4 @@
-import { dirname, join } from 'node:path'
-import { name } from '../package.json'
+import { join } from 'node:path'
 
 export enum Template {
   CargoLayout = 'cargo-layout',
@@ -15,6 +14,5 @@ export enum Template {
 }
 
 export function resolveTemplate(template: Template) {
-  const packageRoot = dirname(require.resolve(`${name}/package.json`))
-  return join(packageRoot, 'templates', template)
+  return join(__dirname, '..', 'templates', template)
 }

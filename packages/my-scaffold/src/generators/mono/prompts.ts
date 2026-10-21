@@ -1,51 +1,24 @@
-import type Inquirer from 'inquirer'
-import { Template } from '#templates'
+import { buildTargets, directoryName, validateWith } from '../../input'
+import {
+  binaryName,
+  type MonorepoInput,
+  monorepoSchema,
+  type PackageInput,
+  packageDirectory,
+  packageName,
+  primaryCandidates,
+} from './schema'
 
-type Access = 'public' | 'private'
-type Target = 'lib' | 'bin'
-type ReleaseStyle = 'primary' | 'all'
-
-export interface PromptPackageAnswer {
-  name: string
-  directory: string
-  access: Access
-  template: Template
-  bin?: string
-}
-
-function resolvePackageTemplate(access: Access, targets: Target[] = []): Template {
-  if (access === 'private') return Template.MonorepoPkgPrivate
-
-  const hasLib = targets.includes('lib')
-  const hasBin = targets.includes('bin')
-
-  if (hasLib && hasBin) return Template.MonorepoPkgBinLib
-  if (hasBin) return Template.MonorepoPkgBin
-  return Template.MonorepoPkgLib
-}
-
-export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPackageAnswer> {
-  const { name, directory, access, targets, bin } = await inquirer.prompt<{
-    name: string
-    directory: string
-    access: Access
-    targets?: Target[]
-    bin?: string
-  }>([
-    {
-      type: 'input',
-      name: 'name',
-      message: 'Enter package name',
-      validate: (input) => {
-        const valid = /^(@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(input)
-        return valid || 'Invalid npm package name'
-      },
-    },
+export async function promptPackage(): Promise<PackageInput> {
+  const { default: inquirer } = await import('inquirer')
+  const base = await inquirer.prompt<{ name: string; directory: string; access: 'public' | 'private' }>([
+    { type: 'input', name: 'name', message: 'Enter package name', validate: validateWith(packageName) },
     {
       type: 'input',
       name: 'directory',
       message: 'Enter directory name',
-      default: ({ name }: { name: string }) => name.split('/').pop(),
+      default: ({ name }: { name: string }) => packageDirectory({ name }),
+      validate: validateWith(directoryName),
     },
     {
       type: 'list',
@@ -56,101 +29,54 @@ export async function promptPackage(inquirer: typeof Inquirer): Promise<PromptPa
         { name: 'private (unbundled)', value: 'private', short: 'private' },
       ],
     },
+  ])
+  if (base.access === 'private') return { ...base, access: 'private' }
+
+  const { targets } = await inquirer.prompt<{ targets: ('lib' | 'bin')[] }>([
     {
       type: 'checkbox',
       name: 'targets',
       message: 'Select build targets',
-      choices: [
-        { name: 'lib', value: 'lib' },
-        { name: 'bin', value: 'bin' },
-      ],
-      default: ['lib'],
-      when: ({ access }) => access === 'public',
-      validate: (input: Target[]) => input.length > 0 || 'Select at least one target',
-    },
-    {
-      type: 'input',
-      name: 'bin',
-      message: 'Enter binary name',
-      validate: (input) => {
-        const valid = /^[a-z0-9](?:[a-z0-9-_]*[a-z0-9])?$/.test(input)
-        return valid || 'Invalid binary name'
-      },
-      when: ({ access, targets }) => access === 'public' && !!targets?.includes('bin'),
+      choices: ['lib', 'bin'],
+      default: buildTargets.parse(undefined),
+      validate: validateWith(buildTargets),
     },
   ])
-
-  return {
-    name,
-    directory,
-    access,
-    template: resolvePackageTemplate(access, targets),
-    bin,
-  }
+  const { bin } = targets.includes('bin')
+    ? await inquirer.prompt<{ bin: string }>([
+        { type: 'input', name: 'bin', message: 'Enter binary name', validate: validateWith(binaryName) },
+      ])
+    : { bin: undefined }
+  return { ...base, access: 'public', targets, bin }
 }
 
-export interface PromptMonorepoInitAnswer {
-  packages: PromptPackageAnswer[]
-  releaseStyle: ReleaseStyle
-  // The primary package whose version drives the release commit message.
-  // Only set (and only meaningful) when releaseStyle is 'primary'.
-  main?: string
-}
-
-export async function promptMonorepoInit(inquirer: typeof Inquirer): Promise<PromptMonorepoInitAnswer> {
-  const packages: PromptPackageAnswer[] = []
-
+export async function promptMonorepoInit(): Promise<MonorepoInput> {
+  const { default: inquirer } = await import('inquirer')
+  const packages: PackageInput[] = []
   let addMore = true
   while (addMore) {
-    const pkg = await promptPackage(inquirer)
-    packages.push(pkg)
-
+    packages.push(await promptPackage())
     const { continueAdding } = await inquirer.prompt<{ continueAdding: boolean }>([
-      {
-        type: 'confirm',
-        name: 'continueAdding',
-        message: 'Add more packages?',
-        default: true,
-      },
+      { type: 'confirm', name: 'continueAdding', message: 'Add more packages?', default: true },
     ])
-
     addMore = continueAdding
   }
-
-  const { releaseStyle } = await inquirer.prompt<{ releaseStyle: ReleaseStyle }>([
+  const { releaseStyle } = await inquirer.prompt<{ releaseStyle: 'primary' | 'all' }>([
     {
       type: 'list',
       name: 'releaseStyle',
       message: 'Select release commit message style',
+      default: monorepoSchema.shape.releaseStyle.parse(undefined),
       choices: [
         { name: 'only primary  (chore(release): <version>)', value: 'primary', short: 'primary' },
         { name: 'all packages  (chore: release packages)', value: 'all', short: 'all' },
       ],
     },
   ])
-
-  if (releaseStyle === 'all') {
-    return { packages, releaseStyle }
-  }
-
-  const publicPackages = packages.filter((pkg) => pkg.access === 'public')
-  const candidates = publicPackages.length > 0 ? publicPackages : packages
-
-  if (candidates.length === 1) {
-    return { packages, releaseStyle, main: candidates[0].name }
-  }
-
-  const defaultMain = publicPackages.length > 1 ? publicPackages[1].name : candidates[0].name
-
-  const { mainPackage } = await inquirer.prompt<{ mainPackage: string }>([
-    {
-      type: 'list',
-      name: 'mainPackage',
-      message: 'Select the primary package',
-      choices: candidates.map((pkg) => pkg.name),
-      default: defaultMain,
-    },
+  const candidates = primaryCandidates(packages)
+  if (releaseStyle === 'all' || candidates.length === 1) return { packages, releaseStyle }
+  const { main } = await inquirer.prompt<{ main: string }>([
+    { type: 'list', name: 'main', message: 'Select the primary package', choices: candidates.map((pkg) => pkg.name) },
   ])
-
-  return { packages, releaseStyle, main: mainPackage }
+  return { packages, releaseStyle, main }
 }
