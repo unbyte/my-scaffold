@@ -1,5 +1,26 @@
 # @unbyte/my-scaffold
 
+## 0.10.0
+
+### Minor Changes
+
+- ad1614c: Choose how to release a monorepo after creating it:
+
+  - Run `ms changeset/local` for local versioning and publishing, with release commits listing all changed packages.
+  - Run `ms changeset/ci` for GitHub version pull requests and automated npm publishing. Setup infers your GitHub repository from Git origin and collects workflow settings. It includes instructions for npm trusted publishing.
+
+  Both generators infer the release branch from Git origin HEAD and ask when it is unavailable. Explicit `repository` and `baseBranch` inputs override Git inference.
+
+  `mono/init` now creates the workspace without Changesets. Run one of the new generators at the workspace root to add release support. Remove `releaseStyle` and `main` from existing `mono/init` JSON inputs; release messages now always use the all-packages style.
+
+- 37d869d: Scaffold projects from scripts and coding agents without answering prompts. Pass your configuration with `--input <file>` or pipe JSON through `--input -`. Interactive prompts remain available in a terminal.
+
+  - Inspect accepted inputs with `ms <generator> --schema`, see examples with `--help`, and list generators with `ms list --json`.
+  - Use `--non-interactive` to fail when required input is missing instead of prompting.
+  - Skip pnpm installation with `--no-install` or Git initialization with `--no-git`.
+
+  Requires Node.js 18.3 or newer. `vite/init` now requires an empty or nonexistent target directory.
+
 ## 0.9.0
 
 ### Minor Changes
