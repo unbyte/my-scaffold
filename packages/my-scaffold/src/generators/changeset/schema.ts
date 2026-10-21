@@ -29,7 +29,11 @@ export const localSchema = z.strictObject({ baseBranch }).meta({
 
 export const ciSchema = z
   .strictObject({
-    repository,
+    repository: repository
+      .optional()
+      .describe(
+        'GitHub owner/repository; inferred from origin when the target is the Git root. Explicit input overrides inference; required if inference fails.',
+      ),
     baseBranch,
     access: z.enum(['public', 'restricted']).default('public').describe('Default npm access for published packages'),
     nodeVersion: z.enum(['22', '24', '26']).default('24').describe('Node.js major version for release jobs'),

@@ -1,6 +1,7 @@
 import type { GeneratorContext } from '../definition'
 import { validateWith } from '../input'
 import { pinnedPnpmVersion, readProject } from './files'
+import { inferRepository } from './repository'
 import { baseBranch, buildScript, type CiInput, ciSchema, type LocalInput, pnpmVersion, repository } from './schema'
 
 export async function promptLocal(): Promise<LocalInput> {
@@ -19,12 +20,14 @@ export async function promptLocal(): Promise<LocalInput> {
 export async function promptCi(context: Pick<GeneratorContext, 'target'>): Promise<CiInput> {
   const pkg = await readProject(context.target)
   const pinned = pinnedPnpmVersion(pkg.packageManager)
+  const inferredRepository = await inferRepository(context.target)
   const { default: inquirer } = await import('inquirer')
   const input = await inquirer.prompt<Omit<CiInput, 'buildScript'>>([
     {
       type: 'input',
       name: 'repository',
       message: 'GitHub repository (owner/repository)',
+      when: inferredRepository === undefined,
       validate: validateWith(repository),
     },
     {
@@ -69,5 +72,5 @@ export async function promptCi(context: Pick<GeneratorContext, 'target'>): Promi
       default: scripts.includes('build') ? 'build' : false,
     },
   ])
-  return { ...input, ...build }
+  return { ...input, ...build, repository: inferredRepository ?? input.repository }
 }

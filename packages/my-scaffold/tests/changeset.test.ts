@@ -2,9 +2,11 @@ import assert from 'node:assert/strict'
 import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
+import execa from 'execa'
 import { test } from 'vitest'
 import { readJson } from '../src/actions/json'
 import { getGenerator } from '../src/generators'
+import { parseGitHubRemote } from '../src/generators/changeset/repository'
 import { ciSchema, localSchema } from '../src/generators/changeset/schema'
 import { fixture } from './fixture'
 
@@ -222,4 +224,69 @@ test('Changesets inputs reject invalid branches, repository names, versions, and
     { ...valid, nodeVersion: '18' },
   ])
     assert.equal(ciSchema.safeParse(input).success, false)
+})
+
+test('GitHub remote URLs normalize to owner/repository', () => {
+  for (const remote of [
+    'https://github.com/example/project.git',
+    'https://github.com/example/project/',
+    'git@github.com:example/project.git',
+    'ssh://git@github.com/example/project.git',
+    'ssh://git@github.com:22/example/project',
+    'git://github.com/example/project.git',
+  ])
+    assert.equal(parseGitHubRemote(remote), 'example/project', remote)
+  for (const remote of [
+    'git@gitlab.com:example/project.git',
+    'https://github.com.evil.example/example/project',
+    'https://github.com/example/project/tree/main',
+    'https://github.com/example/project?other=value',
+    'file:///example/project',
+    '/example/project',
+  ])
+    assert.equal(parseGitHubRemote(remote), undefined, remote)
+})
+
+test('CI setup infers origin and gives explicit input precedence', async (t) => {
+  const root = await fixture(t)
+  for (const repository of [undefined, 'override/project']) {
+    const target = join(root, repository === undefined ? 'inferred' : 'explicit')
+    const context = await createWorkspace(target)
+    await execa('git', ['init', '--quiet', target])
+    await execa('git', ['remote', 'add', 'origin', 'git@github.com:example/project.git'], { cwd: target })
+    await getGenerator('changeset/ci').run({ repository, baseBranch: 'main', pnpmVersion: '11.21.0' }, context)
+    const expected = repository ?? 'example/project'
+    const config = await readJson(join(target, '.changeset/config.json'))
+    assert.deepEqual(config.changelog, ['@changesets/changelog-github', { repo: expected }])
+    const manifest = await readJson<{ repository: { url: string } }>(join(target, 'packages/core/package.json'))
+    assert.equal(manifest.repository.url, `git+https://github.com/${expected}.git`)
+    assert.ok((await readFile(join(target, '.changeset/README.md'), 'utf8')).includes(expected))
+  }
+})
+
+test('unusable remotes require explicit input without changing the workspace', async (t) => {
+  const root = await fixture(t)
+  await execa('git', ['init', '--quiet', root])
+  await execa('git', ['remote', 'add', 'origin', 'https://github.com/parent/project.git'], { cwd: root })
+  for (const kind of ['nested', 'no-origin', 'non-github']) {
+    const target = join(root, kind)
+    const context = await createWorkspace(target)
+    if (kind !== 'nested') await execa('git', ['init', '--quiet', target])
+    if (kind === 'non-github') {
+      await execa('git', ['remote', 'add', 'origin', 'git@gitlab.com:example/project.git'], { cwd: target })
+    }
+    const before = await readFile(join(target, 'package.json'), 'utf8')
+    await assert.rejects(
+      getGenerator('changeset/ci').run({ baseBranch: 'main', pnpmVersion: '11.21.0' }, context),
+      /provide repository as owner\/repository/,
+    )
+    assert.equal(await readFile(join(target, 'package.json'), 'utf8'), before)
+    assert.ok(!(await readdir(target)).includes('.changeset'))
+    await getGenerator('changeset/ci').run(
+      { repository: 'explicit/project', baseBranch: 'main', pnpmVersion: '11.21.0' },
+      context,
+    )
+    const config = await readJson(join(target, '.changeset/config.json'))
+    assert.deepEqual(config.changelog, ['@changesets/changelog-github', { repo: 'explicit/project' }])
+  }
 })

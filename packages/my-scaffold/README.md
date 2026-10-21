@@ -59,7 +59,7 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | --- | --- |
 | `mono/init` | `packages` |
 | `changeset/local` | `baseBranch`; targets a workspace created by `mono/init` |
-| `changeset/ci` | `repository` (`owner/repo`), `baseBranch`; optional `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
+| `changeset/ci` | `baseBranch`; optional `repository` (`owner/repo`, inferred from Git origin), `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
 | `mono/pkg` | `name`, `access` (`public` or `private`), optional `directory`; public packages also accept `targets` and `bin` |
 | `cargo/init` | `packages`, containing crate inputs |
 | `cargo/pkg` | `name`, optional `directory`, `publish` (false by default), and `targets` (`["lib"]` by default) |
@@ -101,7 +101,9 @@ For local releases, provide the release branch:
 
 `changeset/local` installs Changesets and adds a commit hook. Running `pnpm exec changeset version` updates versions and changelogs and creates a `chore: release packages` commit listing the released packages. Build and publish locally when ready.
 
-For GitHub Actions, provide the repository and release branch:
+For GitHub Actions, provide the release branch. The repository is inferred from the target’s Git `origin` remote when the target is the Git root. HTTPS, SSH, and Git URLs on `github.com` are supported. An explicit `repository` overrides inference. If Git or a suitable remote is unavailable, interactive setup asks for the repository; JSON input must supply it. A parent checkout’s remote is never inherited.
+
+To specify the repository explicitly:
 
 ```json
 {
