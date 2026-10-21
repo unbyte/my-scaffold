@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { buildTargets, checkPackageDuplicates, directoryName } from '../../input'
 import { Template } from '../../templates'
+import { buildTargets, checkPackageDuplicates, directoryName } from '../input'
 
 export const packageName = z
   .string()

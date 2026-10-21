@@ -32,20 +32,20 @@ Releases use Changesets with `baseBranch: master`. `.changeset/message.js` owns 
 
 **Registry (`src/generators/index.ts`).** This object is the single source of truth for generator names, descriptions, input schemas, prompts, and implementations. Use explicit imports; generators do not need separate build entries.
 
-**Generator contract (`src/generator.ts`).** `defineGenerator` couples a Zod schema to an optional prompt function and a typed async `generate` function. Its `run` method accepts unknown input, validates it, and only then invokes generation. Context contains the resolved target and the `install` and `git` options. There is no action format or execution interpreter: generators call ordinary helpers in sequence.
+**Generator contract (`src/generators/definition.ts`).** `defineGenerator` couples a Zod schema to an optional prompt function and a typed async `generate` function. Its `run` method accepts unknown input, validates it, and only then invokes generation. Context contains the resolved target and the `install` and `git` options. There is no action format or execution interpreter: generators call ordinary helpers in sequence.
 
-**Input (`src/generators/<group>/schema.ts`, `src/input.ts`).** Each generator declares a public, strict Zod input schema. Infer input and parsed types from schemas. Reuse domain schemas between initialization and package generators. Keep public input exportable with `z.toJSONSchema(schema, { io: 'input' })`; descriptions must explain runtime constraints that JSON Schema cannot represent. Store static defaults in schemas. Derive directory names, internal template choices, and primary package selection in normalization functions. Read environment-dependent values in generation preparation.
+**Input (`src/generators/<group>/schema.ts`, `src/generators/input.ts`).** Each generator declares a public, strict Zod input schema. Infer input and parsed types from schemas. Reuse domain schemas between initialization and package generators. Keep public input exportable with `z.toJSONSchema(schema, { io: 'input' })`; descriptions must explain runtime constraints that JSON Schema cannot represent. Store static defaults in schemas. Derive directory names, internal template choices, and primary package selection in normalization functions. Read environment-dependent values in generation preparation.
 
 **Prompts (`src/generators/<group>/prompts.ts`).** Collect the same public input shape accepted from JSON. Import Inquirer lazily so discovery and unattended generation do not load the prompt library. Reuse schema validators and defaults for prompt feedback. Prompts do not select internal templates, write files, or execute commands. Final validation remains authoritative for both input sources.
 
 **Generators (`src/generators/<group>/*.ts`).** Normalize validated input, check workspace prerequisites, and perform generation through direct async calls. Group-specific file helpers live beside the generators. Complete checks that can be performed upfront before modifying files. Propagate failures; generation does not promise rollback.
 
-**Shared helpers.**
+**Shared actions (`src/actions/`).** Keep reusable filesystem, rendering, JSON, and command operations here. Generator contracts and shared input rules belong in `src/generators/`; the source root contains the CLI and template registry.
 
-- `src/template.ts` copies template trees using Handlebars. It renders text, preserves binary files and executable bits, maps `_` path segments to dotfiles, and checks all destinations for that template before writing. It rejects existing files and symlink traversal inside the target.
-- `src/files.ts` checks directories and new destination paths.
-- `src/json.ts` reads and modifies regular JSON files, writes two-space indentation with a trailing newline, and merges objects recursively with source scalars and arrays taking precedence.
-- `src/commands.ts` runs commands with explicit working directories and closed stdin. Errors propagate. Generators decide whether to install dependencies or initialize Git; declaring dependencies must not depend on installation being enabled.
+- `src/actions/template.ts` copies template trees using Handlebars. It renders text, preserves binary files and executable bits, maps `_` path segments to dotfiles, and checks all destinations for that template before writing. It rejects existing files and symlink traversal inside the target.
+- `src/actions/files.ts` checks directories and new destination paths.
+- `src/actions/json.ts` reads and modifies regular JSON files, writes two-space indentation with a trailing newline, and merges objects recursively with source scalars and arrays taking precedence.
+- `src/actions/commands.ts` runs commands with explicit working directories and closed stdin. Errors propagate. Generators decide whether to install dependencies or initialize Git; declaring dependencies must not depend on installation being enabled.
 
 ## Templates and build
 

@@ -1,9 +1,9 @@
 import { realpath } from 'node:fs/promises'
 import { join } from 'node:path'
 import execa from 'execa'
-import { runCommand } from '../../commands'
-import { checkDirectory } from '../../files'
-import { renderTemplate } from '../../template'
+import { runCommand } from '../../actions/commands'
+import { checkDirectory } from '../../actions/files'
+import { renderTemplate } from '../../actions/template'
 import { Template } from '../../templates'
 import type { normalizeCrate } from './schema'
 

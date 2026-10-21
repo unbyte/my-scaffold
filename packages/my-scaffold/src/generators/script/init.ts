@@ -1,7 +1,7 @@
-import { gitInit, pnpmInstall } from '../../commands'
-import { defineGenerator } from '../../generator'
-import { renderTemplate } from '../../template'
+import { gitInit, pnpmInstall } from '../../actions/commands'
+import { renderTemplate } from '../../actions/template'
 import { Template } from '../../templates'
+import { defineGenerator } from '../definition'
 import { scriptSchema } from './schema'
 
 export const scriptInit = defineGenerator({

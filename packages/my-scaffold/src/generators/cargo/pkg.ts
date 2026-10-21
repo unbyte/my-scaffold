@@ -1,5 +1,5 @@
-import { checkNewPath } from '../../files'
-import { defineGenerator } from '../../generator'
+import { checkNewPath } from '../../actions/files'
+import { defineGenerator } from '../definition'
 import { addCrate, cargoLockfile, checkCargoWorkspace } from './files'
 import { promptCargoPackage } from './prompts'
 import { crateSchema, normalizeCrate } from './schema'

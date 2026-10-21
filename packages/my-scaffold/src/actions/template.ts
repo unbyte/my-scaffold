@@ -2,8 +2,8 @@ import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, sep } from 'node:path'
 import Handlebars from 'handlebars'
 import { isBinaryFile } from 'isbinaryfile'
+import { resolveTemplate, type Template } from '../templates'
 import { checkNewPath } from './files'
-import { resolveTemplate, type Template } from './templates'
 
 export async function copyTemplate(
   source: string,

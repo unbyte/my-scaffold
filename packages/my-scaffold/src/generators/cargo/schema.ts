@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { buildTargets, checkPackageDuplicates } from '../../input'
+import { buildTargets, checkPackageDuplicates } from '../input'
 
 const reservedNames = new Set(
   `as async await break const continue crate dyn else enum extern false fn for if impl in let loop match mod move mut

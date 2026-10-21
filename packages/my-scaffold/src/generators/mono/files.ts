@@ -1,9 +1,9 @@
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import execa from 'execa'
-import { checkDirectory, pathStats } from '../../files'
-import { modifyJson, readJson } from '../../json'
-import { renderTemplate } from '../../template'
+import { checkDirectory, pathStats } from '../../actions/files'
+import { modifyJson, readJson } from '../../actions/json'
+import { renderTemplate } from '../../actions/template'
 import type { normalizePackage } from './schema'
 
 type Package = ReturnType<typeof normalizePackage>

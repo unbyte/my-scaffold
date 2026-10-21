@@ -1,10 +1,10 @@
 import { basename, join } from 'node:path'
-import { pnpmInstall } from '../../commands'
-import { checkDirectory } from '../../files'
-import { defineGenerator } from '../../generator'
-import { modifyJson, readJson } from '../../json'
-import { renderTemplate } from '../../template'
+import { pnpmInstall } from '../../actions/commands'
+import { checkDirectory } from '../../actions/files'
+import { modifyJson, readJson } from '../../actions/json'
+import { renderTemplate } from '../../actions/template'
 import { Template } from '../../templates'
+import { defineGenerator } from '../definition'
 import { wranglerSchema } from './schema'
 
 interface PackageJson {

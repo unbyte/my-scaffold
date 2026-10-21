@@ -1,4 +1,4 @@
-import { buildTargets, directoryName, validateWith } from '../../input'
+import { buildTargets, directoryName, validateWith } from '../input'
 import {
   binaryName,
   type MonorepoInput,

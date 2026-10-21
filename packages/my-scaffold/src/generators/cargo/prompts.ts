@@ -1,4 +1,4 @@
-import { buildTargets, validateWith } from '../../input'
+import { buildTargets, validateWith } from '../input'
 import { type CargoWorkspaceInput, type CrateInput, crateDirectory, crateName, crateSchema } from './schema'
 
 export async function promptCargoPackage(): Promise<CrateInput> {
