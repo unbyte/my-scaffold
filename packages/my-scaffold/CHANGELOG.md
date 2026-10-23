@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.11.0
+
+### Minor Changes
+
+- 46675ae: feat: add electron app generator
+
 ## 0.10.0
 
 ### Minor Changes
