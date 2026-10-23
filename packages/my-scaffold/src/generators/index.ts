@@ -2,6 +2,7 @@ import { cargoInit } from './cargo/init'
 import { cargoPackage } from './cargo/pkg'
 import { changesetCi } from './changeset/ci'
 import { changesetLocal } from './changeset/local'
+import { electronInit } from './electron/init'
 import { monoInit } from './mono/init'
 import { monoPackage } from './mono/pkg'
 import { scriptInit } from './script/init'
@@ -13,6 +14,7 @@ export const generators = {
   'cargo/pkg': cargoPackage,
   'changeset/local': changesetLocal,
   'changeset/ci': changesetCi,
+  'electron/init': electronInit,
   'mono/init': monoInit,
   'mono/pkg': monoPackage,
   'script/init': scriptInit,

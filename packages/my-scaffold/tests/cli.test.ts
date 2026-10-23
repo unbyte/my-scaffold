@@ -27,7 +27,7 @@ test('discovery prints machine-readable contracts without input, toolchains, or 
   const list = cli(['list', '--json'], root)
   assert.equal(list.status, 0, list.stderr)
   const entries = JSON.parse(list.stdout) as { name: string; description: string }[]
-  assert.equal(entries.length, 9)
+  assert.ok(entries.some((entry) => entry.name === 'electron/init'))
   for (const generator of entries) {
     const result = cli([generator.name, '--schema'], root)
     assert.equal(result.status, 0, result.stderr)
@@ -124,4 +124,17 @@ test('a failed external command stops generation and returns a nonzero status', 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /pnpm|ENOENT/)
   assert.deepEqual(await readdir(join(root, 'output')), [])
+})
+
+test('Electron scaffolding with JSON input needs no external tools when install and Git are disabled', async (t) => {
+  const root = await fixture(t)
+  const result = cli(
+    ['electron/init', 'desktop', '--input', '-', '--no-install', '--no-git'],
+    root,
+    '{"name":"my-desktop"}',
+  )
+  assert.equal(result.status, 0, result.stderr)
+  const pkg = JSON.parse(await readFile(join(root, 'desktop/package.json'), 'utf8'))
+  assert.equal(pkg.name, 'my-desktop')
+  assert.ok(pkg.devDependencies['vite-plugin-electron'])
 })

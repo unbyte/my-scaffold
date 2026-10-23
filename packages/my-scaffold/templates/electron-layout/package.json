@@ -1,0 +1,45 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "description": "{{name}} desktop application",
+  "private": true,
+  "type": "module",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "prepare": "lefthook install",
+    "dev": "vite",
+    "build": "pnpm check:types && vite build",
+    "start": "electron .",
+    "pack": "pnpm build && electron-builder --dir --publish never",
+    "dist": "pnpm build && electron-builder --publish never",
+    "check": "pnpm check:lint && pnpm check:types",
+    "check:lint": "biome check",
+    "check:types": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "fix": "biome check --write",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "cov": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.2",
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3",
+    "lefthook": "^2.2.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-electron": "^1.1.2",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0 <12.0.0",
+      "onFail": "error"
+    }
+  }
+}

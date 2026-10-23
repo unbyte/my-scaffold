@@ -1,6 +1,6 @@
 # @unbyte/my-scaffold
 
-`ms` creates personal project layouts for TypeScript monorepos, Rust workspaces, scripts, and Vite applications.
+`ms` creates personal project layouts for TypeScript monorepos, Rust workspaces, scripts, Vite applications, and Electron desktop apps.
 
 ```sh
 pnpm add -g @unbyte/my-scaffold
@@ -64,6 +64,7 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | `cargo/init` | `packages`, containing crate inputs |
 | `cargo/pkg` | `name`, optional `directory`, `publish` (false by default), and `targets` (`["lib"]` by default) |
 | `script/init` | `{}`; no input file needed |
+| `electron/init` | `name` (lowercase letters, numbers, and hyphens; starts with a letter; portable directory name), optional `appId` (reverse-domain identifier, defaults to `com.example.desktop`) |
 | `vite/init` | `template`, such as `react-ts` or `vanilla-ts`; see `--schema` for supported templates |
 | `vite/wrangler` | `{}`; targets an existing project with `package.json`; no input file needed |
 
@@ -80,6 +81,32 @@ A minimal Vite input is:
 ```json
 { "template": "react-ts" }
 ```
+
+## Create an Electron app
+
+```sh
+ms electron/init ./my-desktop
+```
+
+For JSON input:
+
+```json
+{ "name": "my-desktop", "appId": "com.example.desktop" }
+```
+
+`electron/init` creates a Vanilla TypeScript app using `vite-plugin-electron/simple`, with Biome, Lefthook, Vitest, coverage, and separate renderer and Node type checks. It requires an empty or nonexistent target. Generation uses local templates; `--no-install --no-git` runs without external tools or network access. Generated projects require Node.js 22.18+, 24.11+, or 26+ and pnpm 11.
+
+| Generated command | Behavior |
+| --- | --- |
+| `pnpm dev` | Start Vite and Electron; renderer HMR, main-process restarts, preload reloads |
+| `pnpm check` / `pnpm fix` | Biome and TypeScript checks / Biome autofix |
+| `pnpm test` / `pnpm test:watch` / `pnpm cov` | Vitest unit tests, watch mode, and coverage without launching Electron |
+| `pnpm build` | Type-check and compile renderer, main, and preload |
+| `pnpm start` | Run the compiled app after building |
+| `pnpm run pack` | Build an unpacked desktop app with electron-builder |
+| `pnpm dist` | Build the host platform's installer without publishing |
+
+The plugin handles production compilation; electron-builder handles app packaging into `release/` (DMG, NSIS, or AppImage on the corresponding host). The generated README covers app identity, signing, and native dependencies. The renderer uses a typed preload bridge with context isolation and sandboxing; Node integration is disabled. Vitest has an independent config and an example test for the navigation/IPC URL policy. UI and Electron integration tests are not configured.
 
 ## Set up releases
 

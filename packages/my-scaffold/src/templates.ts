@@ -5,6 +5,7 @@ export enum Template {
   CargoPkg = 'cargo-pkg',
   ChangesetLocal = 'changeset-local',
   ChangesetCi = 'changeset-ci',
+  ElectronLayout = 'electron-layout',
   MonorepoLayout = 'monorepo-layout',
   MonorepoPkgBin = 'monorepo-pkg-bin',
   MonorepoPkgBinLib = 'monorepo-pkg-bin-lib',
