@@ -1,5 +1,11 @@
 # @unbyte/my-scaffold
 
+## 0.12.0
+
+### Minor Changes
+
+- 4ca1ade: feat: support platform and output format selection for monorepo packages
+
 ## 0.11.0
 
 ### Minor Changes
