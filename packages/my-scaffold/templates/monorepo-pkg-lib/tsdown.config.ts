@@ -3,8 +3,8 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
   entry: ['src/index.ts'],
   outDir: 'lib',
-  format: ['esm', 'cjs'],
-  platform: 'node',
+  format: [{{#each format}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}],
+  platform: '{{ platform }}',
   dts: true,
   clean: true,
   minify: false,

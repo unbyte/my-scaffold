@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { checkDirectory, pathStats } from '../../actions/files'
 import { modifyJson, readJson } from '../../actions/json'
 import { renderTemplate } from '../../actions/template'
+import { Template } from '../../templates'
 import type { normalizePackage } from './schema'
 
 type Package = ReturnType<typeof normalizePackage>
@@ -43,7 +44,25 @@ export async function listPackages(path: string) {
 }
 
 export async function addPackage(path: string, pkg: Package) {
-  await renderTemplate(join(path, 'packages', pkg.directory), pkg.template, { pkgName: pkg.name, binName: pkg.bin })
+  const data: Record<string, unknown> = { pkgName: pkg.name }
+  if (pkg.access === 'public') {
+    Object.assign(data, {
+      binName: pkg.bin,
+      format: pkg.format,
+      esm: pkg.format.includes('esm'),
+      cjs: pkg.format.includes('cjs'),
+    })
+    if (pkg.template === Template.MonorepoPkgLib) {
+      Object.assign(data, {
+        platform: pkg.platform,
+        node: pkg.platform === 'node',
+        browser: pkg.platform === 'browser',
+        esmExtension: pkg.platform === 'node' ? 'mjs' : 'js',
+        esmDeclarationExtension: pkg.platform === 'node' ? 'mts' : 'ts',
+      })
+    }
+  }
+  await renderTemplate(join(path, 'packages', pkg.directory), pkg.template, data)
   await modifyJson<{ references?: { path: string }[] }>(join(path, 'tsconfig.json'), (config) => {
     const referencePath = `./packages/${pkg.directory}`
     config.references ??= []

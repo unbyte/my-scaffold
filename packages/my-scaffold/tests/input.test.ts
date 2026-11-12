@@ -33,8 +33,33 @@ test('invalid package combinations and unsafe directories are rejected', () => {
     { name: 'core', access: 'public', directory: 'CON' },
     { name: 'core', access: 'public', directory: 'core.' },
     { name: 'core', access: 'public', template: 'arbitrary' },
+    { name: 'core', access: 'public', platform: 'deno' },
+    { name: 'core', access: 'public', format: [] },
+    { name: 'core', access: 'public', format: ['esm', 'esm'] },
+    { name: 'core', access: 'public', format: ['iife'] },
+    { name: 'core', access: 'public', format: 'esm' },
+    { name: 'core', access: 'public', platform: 'browser', format: ['esm', 'cjs'] },
+    { name: 'core', access: 'public', platform: 'browser', targets: ['bin'], bin: 'core' },
+    { name: 'core', access: 'public', platform: 'neutral', targets: ['lib', 'bin'], bin: 'core' },
+    { name: 'core', access: 'private', platform: 'node' },
+    { name: 'core', access: 'private', format: ['esm'] },
   ])
     assert.equal(packageSchema.safeParse(input).success, false, JSON.stringify(input))
+})
+
+test('package output defaults follow the platform and preserve explicit formats', () => {
+  const base = { name: 'core', access: 'public' }
+  const defaultPackage = normalizePackage(packageSchema.parse(base))
+  assert.equal(defaultPackage.access, 'public')
+  assert.equal(defaultPackage.platform, 'node')
+  for (const platform of ['node', 'browser', 'neutral']) {
+    const pkg = normalizePackage(packageSchema.parse({ ...base, platform }))
+    assert.equal(pkg.access, 'public')
+    assert.deepEqual(pkg.format, platform === 'browser' ? ['esm'] : ['esm', 'cjs'])
+    const explicit = normalizePackage(packageSchema.parse({ ...base, platform, format: ['esm'] }))
+    assert.equal(explicit.access, 'public')
+    assert.deepEqual(explicit.format, ['esm'])
+  }
 })
 
 test('monorepos accept multiple packages and reject duplicate names and directories', () => {

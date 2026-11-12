@@ -21,23 +21,29 @@
   },
   "publishConfig": {
     "access": "public",
-    "main": "lib/index.cjs",
+    "main": "lib/index.{{#if cjs}}cjs{{else}}mjs{{/if}}",
+{{#if esm}}
     "module": "lib/index.mjs",
-    "types": "lib/index.d.mts",
+{{/if}}
+    "types": "lib/index.d.{{#if esm}}mts{{else}}cts{{/if}}",
     "exports": {
       ".": {
+{{#if esm}}
         "import": {
           "types": "./lib/index.d.mts",
           "default": "./lib/index.mjs"
-        },
-        "require": {
+        }{{#if cjs}},{{/if}}
+{{/if}}
+{{#if cjs}}
+        "{{#if esm}}require{{else}}default{{/if}}": {
           "types": "./lib/index.d.cts",
           "default": "./lib/index.cjs"
         }
+{{/if}}
       }
     },
     "bin": {
-      "{{ binName }}": "./lib/bin.mjs"
+      "{{ binName }}": "./lib/bin.{{#if esm}}mjs{{else}}cjs{{/if}}"
     }
   }
 }

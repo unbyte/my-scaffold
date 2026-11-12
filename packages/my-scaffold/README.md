@@ -60,7 +60,7 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | `mono/init` | `packages` |
 | `changeset/local` | Optional `baseBranch` (inferred from Git origin HEAD); targets a workspace created by `mono/init` |
 | `changeset/ci` | Optional `baseBranch` (inferred from Git origin HEAD), `repository` (`owner/repo`, inferred from Git origin), `pnpmVersion`, `nodeVersion`, `buildScript`, and `access` |
-| `mono/pkg` | `name`, `access` (`public` or `private`), optional `directory`; public packages also accept `targets` and `bin` |
+| `mono/pkg` | `name`, `access` (`public` or `private`), optional `directory`; public packages also accept `targets`, `bin`, `platform`, and `format` |
 | `cargo/init` | `packages`, containing crate inputs |
 | `cargo/pkg` | `name`, optional `directory`, `publish` (false by default), and `targets` (`["lib"]` by default) |
 | `script/init` | `{}`; no input file needed |
@@ -68,7 +68,25 @@ Schemas describe types, allowed fields, static defaults, and input examples. Run
 | `vite/init` | `template`, such as `react-ts` or `vanilla-ts`; see `--schema` for supported templates |
 | `vite/wrangler` | `{}`; targets an existing project with `package.json`; no input file needed |
 
-Package directories default to the unscoped npm name or crate name. Each directory must be a single portable name inside `packages/` or `crates/`. Public npm packages default to `targets: ["lib"]`. A `bin` name is required exactly when `targets` includes `bin`. Private npm packages accept neither `targets` nor `bin`.
+Package directories default to the unscoped npm name or crate name. Each directory must be a single portable name inside `packages/` or `crates/`. Public npm packages default to `targets: ["lib"]`. A `bin` name is required exactly when `targets` includes `bin`. Private npm packages are unbundled and do not accept `targets`, `bin`, `platform`, or `format`.
+
+Public npm packages configure the existing library, CLI, or library + CLI template with `platform` and `format`:
+
+| Platform | Output formats | Default |
+| --- | --- | --- |
+| `node` (default) | `esm`, `cjs`, or both | `["esm", "cjs"]` |
+| `browser` | `esm` | `["esm"]` |
+| `neutral` | `esm`, `cjs`, or both | `["esm", "cjs"]` |
+
+`format` is a nonempty array without duplicates. Interactive setup asks library-only packages for platform first. Browser packages automatically use ESM and skip the format prompt; Node and neutral packages choose ESM, CJS, or both. Any package with a binary target, including library + CLI packages, uses `node` and skips the platform prompt; JSON input rejects other platforms for these packages. Browser packages exclude CJS because [tsdown always uses Node semantics for CJS](https://tsdown.dev/options/platform); use `neutral` for a library shared across runtimes. These npm package templates support ESM and CJS, not IIFE or UMD script bundles.
+
+For a browser library:
+
+```json
+{ "name": "@example/browser", "access": "public", "platform": "browser" }
+```
+
+Generated publish metadata follows tsdown's default filenames and includes only the selected formats. Node ESM builds use `.mjs` and `.d.mts`; browser and neutral ESM builds use `.js` and `.d.ts`. CJS builds use `.cjs` and `.d.cts`. CJS-only libraries expose a default export condition so both `import` and `require` can resolve them; dual-format libraries route each consumer to its corresponding build. Binaries use ESM when selected, otherwise CJS. TypeScript configuration includes DOM types for browser packages, Node types for Node packages, and neither for neutral packages.
 
 A minimal Cargo input is:
 

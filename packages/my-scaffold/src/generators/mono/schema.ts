@@ -9,6 +9,18 @@ export const packageName = z
 
 export const binaryName = z.string().regex(/^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/, 'Invalid binary name')
 
+export const packagePlatform = z.enum(['node', 'browser', 'neutral']).default('node')
+
+export const packageFormats = z
+  .array(z.enum(['esm', 'cjs']))
+  .min(1, 'Select at least one output format')
+  .max(2)
+  .refine((formats) => new Set(formats).size === formats.length, 'Output formats must be unique')
+
+export function defaultPackageFormats(platform: z.output<typeof packagePlatform>): z.output<typeof packageFormats> {
+  return platform === 'browser' ? ['esm'] : ['esm', 'cjs']
+}
+
 const packageFields = {
   name: packageName.describe('npm package name, optionally scoped'),
   directory: directoryName.optional().describe('Directory inside packages/; defaults to the unscoped package name'),
@@ -20,10 +32,26 @@ export const publicPackageSchema = z
     access: z.literal('public'),
     targets: buildTargets,
     bin: binaryName.optional().describe('Required when targets includes bin; otherwise omit'),
+    platform: packagePlatform.describe('Runtime platform; bin targets require node'),
+    format: packageFormats
+      .optional()
+      .describe(
+        'Unique output formats; defaults to [esm] for browser, [esm, cjs] otherwise. Browser requires esm only',
+      ),
   })
   .superRefine((pkg, context) => {
     if (pkg.targets.includes('bin') !== (pkg.bin !== undefined)) {
       context.addIssue({ code: 'custom', path: ['bin'], message: 'Provide bin exactly when targets includes bin' })
+    }
+    if (pkg.targets.includes('bin') && pkg.platform !== 'node') {
+      context.addIssue({ code: 'custom', path: ['platform'], message: 'Binary targets require the node platform' })
+    }
+    if (pkg.platform === 'browser' && pkg.format?.includes('cjs')) {
+      context.addIssue({
+        code: 'custom',
+        path: ['format'],
+        message: 'Browser packages require esm output; use neutral for libraries that also support Node.js CJS',
+      })
     }
   })
 
@@ -73,10 +101,7 @@ export function normalizePackage(pkg: PackageConfig) {
         : Template.MonorepoPkgBin
       : Template.MonorepoPkgLib
   }
-  return {
-    name: pkg.name,
-    directory: packageDirectory(pkg),
-    template,
-    bin: pkg.access === 'public' ? pkg.bin : undefined,
-  }
+  const directory = packageDirectory(pkg)
+  if (pkg.access === 'private') return { ...pkg, directory, template }
+  return { ...pkg, directory, template, format: pkg.format ?? defaultPackageFormats(pkg.platform) }
 }

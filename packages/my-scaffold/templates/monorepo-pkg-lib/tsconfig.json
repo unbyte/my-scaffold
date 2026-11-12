@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "lib": ["esnext"],
-    "types": ["node"],
+    "lib": ["esnext"{{#if browser}}, "dom", "dom.iterable"{{/if}}],
+    "types": [{{#if node}}"node"{{/if}}],
     "moduleResolution": "bundler",
     "noEmit": true,
     "strict": true,

@@ -1,5 +1,15 @@
 import { buildTargets, directoryName, validateWith } from '../input'
-import { binaryName, type MonorepoInput, type PackageInput, packageDirectory, packageName } from './schema'
+import {
+  binaryName,
+  defaultPackageFormats,
+  type MonorepoInput,
+  type PackageConfig,
+  type PackageInput,
+  packageDirectory,
+  packageFormats,
+  packageName,
+  packagePlatform,
+} from './schema'
 
 export async function promptPackage(): Promise<PackageInput> {
   const { default: inquirer } = await import('inquirer')
@@ -17,7 +27,7 @@ export async function promptPackage(): Promise<PackageInput> {
       name: 'access',
       message: 'Select package access',
       choices: [
-        { name: 'public  (bundled, esm + cjs)', value: 'public', short: 'public' },
+        { name: 'public  (bundled)', value: 'public', short: 'public' },
         { name: 'private (unbundled)', value: 'private', short: 'private' },
       ],
     },
@@ -39,7 +49,34 @@ export async function promptPackage(): Promise<PackageInput> {
         { type: 'input', name: 'bin', message: 'Enter binary name', validate: validateWith(binaryName) },
       ])
     : { bin: undefined }
-  return { ...base, access: 'public', targets, bin }
+  const { platform } = targets.includes('bin')
+    ? { platform: 'node' as const }
+    : await inquirer.prompt<Pick<Extract<PackageConfig, { access: 'public' }>, 'platform'>>([
+        {
+          type: 'list',
+          name: 'platform',
+          message: 'Select runtime platform',
+          choices: packagePlatform.unwrap().options,
+          default: packagePlatform.parse(undefined),
+        },
+      ])
+  const { format } =
+    platform === 'browser'
+      ? { format: defaultPackageFormats(platform) }
+      : await inquirer.prompt<Pick<Extract<PackageConfig, { access: 'public' }>, 'format'>>([
+          {
+            type: 'checkbox',
+            name: 'format',
+            message: 'Select output formats',
+            choices: [
+              { name: 'ESM', value: 'esm' },
+              { name: 'CommonJS', value: 'cjs' },
+            ],
+            default: defaultPackageFormats(platform),
+            validate: validateWith(packageFormats),
+          },
+        ])
+  return { ...base, access: 'public', targets, bin, platform, format }
 }
 
 export async function promptMonorepoInit(): Promise<MonorepoInput> {

@@ -18,19 +18,25 @@
   },
   "publishConfig": {
     "access": "public",
-    "main": "lib/index.cjs",
-    "module": "lib/index.mjs",
-    "types": "lib/index.d.mts",
+    "main": "lib/index.{{#if cjs}}cjs{{else}}{{ esmExtension }}{{/if}}",
+{{#if esm}}
+    "module": "lib/index.{{ esmExtension }}",
+{{/if}}
+    "types": "lib/index.d.{{#if esm}}{{ esmDeclarationExtension }}{{else}}cts{{/if}}",
     "exports": {
       ".": {
+{{#if esm}}
         "import": {
-          "types": "./lib/index.d.mts",
-          "default": "./lib/index.mjs"
-        },
-        "require": {
+          "types": "./lib/index.d.{{ esmDeclarationExtension }}",
+          "default": "./lib/index.{{ esmExtension }}"
+        }{{#if cjs}},{{/if}}
+{{/if}}
+{{#if cjs}}
+        "{{#if esm}}require{{else}}default{{/if}}": {
           "types": "./lib/index.d.cts",
           "default": "./lib/index.cjs"
         }
+{{/if}}
       }
     }
   }
